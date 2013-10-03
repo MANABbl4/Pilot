@@ -51,7 +51,7 @@ public class Earth : SingletonGameObject<Earth>
 
 		List<List<ushort>> data = null;
 		data = LoadTerrain("Assets/Textures/Earth_bump/neg_y/0_0_0.raw", 128, 128);
-		InitTerrain(InitPlane(), data, Vector3.down, Vector3.left);
+		InitTerrain(InitPlane(), data, Vector3.down, Vector3.right);
 		data = LoadTerrain("Assets/Textures/Earth_bump/pos_y/0_0_0.raw", 128, 128);
 		InitTerrain(InitPlane(), data, Vector3.up, Vector3.left);
 
@@ -90,18 +90,7 @@ public class Earth : SingletonGameObject<Earth>
 
 	private void InitTerrain(GameObject plane, List<List<ushort>> terrainData, Vector3 dir, Vector3 axis)
 	{
-		ushort min = ushort.MaxValue;
-
-		foreach (List<ushort> l in terrainData)
-		{
-			foreach (ushort m in l)
-			{
-				if (m < min)
-				{
-					min = m;
-				}
-			}
-		}
+		ushort min = 0;
 
 		float h = 63.5f * Mathf.Sqrt(2) / 2;
 		Vector3 c = GetCenter();
