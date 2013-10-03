@@ -49,8 +49,21 @@ public class Earth : SingletonGameObject<Earth>
 		InitAirports();
 		InitPlane();
 
-		List<List<ushort>> data = LoadTerrain("Assets/Textures/Earth_bump/neg_z/0_0_0.raw", 128, 128);
-		InitTerrain(InitPlane(), data);
+		List<List<ushort>> data = null;
+		data = LoadTerrain("Assets/Textures/Earth_bump/neg_y/0_0_0.raw", 128, 128);
+		InitTerrain(InitPlane(), data, Vector3.down, Vector3.left);
+		data = LoadTerrain("Assets/Textures/Earth_bump/pos_y/0_0_0.raw", 128, 128);
+		InitTerrain(InitPlane(), data, Vector3.up, Vector3.left);
+
+		data = LoadTerrain("Assets/Textures/Earth_bump/neg_z/0_0_0.raw", 128, 128);
+		InitTerrain(InitPlane(), data, Vector3.back, Vector3.left);
+		data = LoadTerrain("Assets/Textures/Earth_bump/pos_z/0_0_0.raw", 128, 128);
+		InitTerrain(InitPlane(), data, Vector3.forward, Vector3.left);
+
+		data = LoadTerrain("Assets/Textures/Earth_bump/neg_x/0_0_0.raw", 128, 128);
+		InitTerrain(InitPlane(), data, Vector3.left, Vector3.forward);
+		data = LoadTerrain("Assets/Textures/Earth_bump/pos_x/0_0_0.raw", 128, 128);
+		InitTerrain(InitPlane(), data, Vector3.right, Vector3.forward);
 	}
 
 	protected override void DeInit()
@@ -75,10 +88,23 @@ public class Earth : SingletonGameObject<Earth>
 		}
 	}
 
-	private void InitTerrain(GameObject plane, List<List<ushort>> terrainData)
+	private void InitTerrain(GameObject plane, List<List<ushort>> terrainData, Vector3 dir, Vector3 axis)
 	{
-		int width = 128;
-		int height = 128;
+		ushort min = ushort.MaxValue;
+
+		foreach (List<ushort> l in terrainData)
+		{
+			foreach (ushort m in l)
+			{
+				if (m < min)
+				{
+					min = m;
+				}
+			}
+		}
+
+		float h = 63.5f * Mathf.Sqrt(2) / 2;
+		Vector3 c = GetCenter();
 
 		MeshFilter mf = plane.GetComponent<MeshFilter>();
 		if (mf != null)
@@ -86,21 +112,23 @@ public class Earth : SingletonGameObject<Earth>
 			Mesh m = mf.mesh;
 			Vector3[] vertices = m.vertices;
 
-			//calc index by pos!
-
-			/*for (int i = 0; i < height; ++i)
+			for (int k = 0; k < vertices.Length; ++k)
 			{
-				for (int j = 0; j < width; ++j)
-				{
-					vertices[i * width + j] += (Vector3.up) * terrainData[i][j] / ushort.MaxValue;
-				}
-			}*/
+				int i = (int)((vertices[k].x + 63.5f));
+				int j = (int)((vertices[k].z + 63.5f));
+
+				vertices[k].y += h;
+				Vector3 d = (vertices[k] - c).normalized;
+				vertices[k] = d * (h + (terrainData[i][j] - min) / 5000);
+			}
 
 			m.vertices = vertices;
 			mf.sharedMesh = m;
 			mf.sharedMesh.RecalculateNormals();
 			mf.sharedMesh.RecalculateBounds();
 		}
+
+		plane.transform.Rotate(axis, Vector3.Angle(dir, Vector3.up));
 	}
 
 	private GameObject InitPlane()
@@ -116,7 +144,7 @@ public class Earth : SingletonGameObject<Earth>
 				plane.name = resource.name;
 
 				plane.transform.rotation = Quaternion.identity;
-				plane.transform.position = Vector3.zero;
+				plane.transform.position = GetCenter();
 				plane.transform.localScale = new Vector3(1.0f, 1.0f, 1.0f);
 
 				return plane;
