@@ -47,23 +47,29 @@ public class Earth : SingletonGameObject<Earth>
 		gameObject.transform.rotation = Quaternion.identity;
 
 		InitAirports();
-		InitPlane();
 
 		List<List<ushort>> data = null;
+		Quaternion rot = Quaternion.identity;
+
 		data = LoadTerrain("Assets/Textures/Earth_bump/neg_y/0_0_0.raw", 128, 128);
-		InitTerrain(InitPlane(), data, Vector3.down, Vector3.right);
+		rot = Quaternion.Euler(Vector3.left * 180.0f) * Quaternion.Euler(Vector3.up * -90.0f);
+		InitTerrain(InitPlane(), data, rot);
 		data = LoadTerrain("Assets/Textures/Earth_bump/pos_y/0_0_0.raw", 128, 128);
-		InitTerrain(InitPlane(), data, Vector3.up, Vector3.left);
+		rot = Quaternion.Euler(Vector3.up * 0.0f);
+		InitTerrain(InitPlane(), data, rot);
 
 		data = LoadTerrain("Assets/Textures/Earth_bump/neg_z/0_0_0.raw", 128, 128);
-		InitTerrain(InitPlane(), data, Vector3.back, Vector3.left);
+		rot = Quaternion.Euler(Vector3.left * 180.0f) * Quaternion.Euler(Vector3.forward * 90.0f);
+		InitTerrain(InitPlane(), data, rot);
 		data = LoadTerrain("Assets/Textures/Earth_bump/pos_z/0_0_0.raw", 128, 128);
-		InitTerrain(InitPlane(), data, Vector3.forward, Vector3.left);
+		rot = Quaternion.Euler(Vector3.back * 90.0f);
+		InitTerrain(InitPlane(), data, rot);
 
 		data = LoadTerrain("Assets/Textures/Earth_bump/neg_x/0_0_0.raw", 128, 128);
-		InitTerrain(InitPlane(), data, Vector3.left, Vector3.forward);
-		data = LoadTerrain("Assets/Textures/Earth_bump/pos_x/0_0_0.raw", 128, 128);
-		InitTerrain(InitPlane(), data, Vector3.right, Vector3.forward);
+		rot = Quaternion.Euler(Vector3.forward * -90.0f) * Quaternion.Euler(Vector3.left * 90.0f);
+		InitTerrain(InitPlane(), data, rot);
+		/*data = LoadTerrain("Assets/Textures/Earth_bump/pos_x/0_0_0.raw", 128, 128);
+		InitTerrain(InitPlane(), data, Vector3.right, Vector3.back);*/
 	}
 
 	protected override void DeInit()
@@ -88,11 +94,11 @@ public class Earth : SingletonGameObject<Earth>
 		}
 	}
 
-	private void InitTerrain(GameObject plane, List<List<ushort>> terrainData, Vector3 dir, Vector3 axis)
+	private void InitTerrain(GameObject plane, List<List<ushort>> terrainData, Quaternion rot)
 	{
 		ushort min = 0;
 
-		float h = 63.5f * Mathf.Sqrt(2) / 2;
+		float h = 63.5f;
 		Vector3 c = GetCenter();
 
 		MeshFilter mf = plane.GetComponent<MeshFilter>();
@@ -103,8 +109,8 @@ public class Earth : SingletonGameObject<Earth>
 
 			for (int k = 0; k < vertices.Length; ++k)
 			{
-				int i = (int)((vertices[k].x + 63.5f));
-				int j = (int)((vertices[k].z + 63.5f));
+				int i = (int)((vertices[k].x + h));
+				int j = (int)((vertices[k].z + h));
 
 				vertices[k].y += h;
 				Vector3 d = (vertices[k] - c).normalized;
@@ -117,7 +123,8 @@ public class Earth : SingletonGameObject<Earth>
 			mf.sharedMesh.RecalculateBounds();
 		}
 
-		plane.transform.Rotate(axis, Vector3.Angle(dir, Vector3.up));
+		plane.transform.rotation *= rot;
+		plane.transform.localScale = Vector3.one * m_radius / h;
 	}
 
 	private GameObject InitPlane()
@@ -155,6 +162,9 @@ public class Earth : SingletonGameObject<Earth>
 	{
 		List<List<ushort>> data = new List<List<ushort>>();
 
+		ushort max = ushort.MinValue;
+		ushort min = ushort.MaxValue;
+
 		using (BinaryReader reader = new BinaryReader(File.Open(fileName, FileMode.Open)))
 		{
 			for (int i = 0; i < height; ++i)
@@ -163,12 +173,25 @@ public class Earth : SingletonGameObject<Earth>
 
 				for (int j = 0; j < width; ++j)
 				{
-					row.Add(reader.ReadUInt16());
+					ushort d = reader.ReadUInt16();
+					if (d > max)
+					{
+						max = d;
+					}
+
+					if (d < min)
+					{
+						min = d;
+					}
+
+					row.Add(d);
 				}
 
 				data.Add(row);
 			}
 		}
+
+		Debug.Log("min " + min + " max " + max);
 
 		return data;
 	}
