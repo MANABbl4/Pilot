@@ -52,7 +52,7 @@ public class Earth : SingletonGameObject<Earth>
 		Quaternion rot = Quaternion.identity;
 
 		data = LoadTerrain("Assets/Textures/Earth_bump/neg_y/0_0_0.raw", 128, 128);
-		rot = Quaternion.Euler(Vector3.left * 180.0f) * Quaternion.Euler(Vector3.up * -90.0f);
+		rot = Quaternion.Euler(Vector3.left * 180.0f) * Quaternion.Euler(Vector3.up * 180.0f);
 		InitTerrain(InitPlane(), data, rot);
 		data = LoadTerrain("Assets/Textures/Earth_bump/pos_y/0_0_0.raw", 128, 128);
 		rot = Quaternion.Euler(Vector3.up * 0.0f);
@@ -68,8 +68,9 @@ public class Earth : SingletonGameObject<Earth>
 		data = LoadTerrain("Assets/Textures/Earth_bump/neg_x/0_0_0.raw", 128, 128);
 		rot = Quaternion.Euler(Vector3.forward * -90.0f) * Quaternion.Euler(Vector3.left * 90.0f);
 		InitTerrain(InitPlane(), data, rot);
-		/*data = LoadTerrain("Assets/Textures/Earth_bump/pos_x/0_0_0.raw", 128, 128);
-		InitTerrain(InitPlane(), data, Vector3.right, Vector3.back);*/
+		data = LoadTerrain("Assets/Textures/Earth_bump/pos_x/0_0_0.raw", 128, 128);
+		rot = Quaternion.Euler(Vector3.forward * -90.0f) * Quaternion.Euler(Vector3.right * 90.0f);
+		InitTerrain(InitPlane(), data, rot);
 	}
 
 	protected override void DeInit()
@@ -114,7 +115,7 @@ public class Earth : SingletonGameObject<Earth>
 
 				vertices[k].y += h;
 				Vector3 d = (vertices[k] - c).normalized;
-				vertices[k] = d * (h + (terrainData[i][j] - min) / 5000);
+				vertices[k] = d * (h + (terrainData[i][j] - min) / 10000);
 			}
 
 			m.vertices = vertices;

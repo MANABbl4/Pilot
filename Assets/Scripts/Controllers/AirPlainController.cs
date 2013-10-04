@@ -129,6 +129,6 @@ public class AirPlainController : MonoBehaviour
 	private Vector2 m_curRot;
 	private Vector3 m_startRot;
 	private Vector2 m_screenCenter;
-	private float m_speed = 15.0f;
-	private float m_height = 10.0f;
+	private float m_speed = 150.0f;
+	private float m_height = 100.0f;
 }
