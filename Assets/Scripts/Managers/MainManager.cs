@@ -17,6 +17,8 @@ public class MainManager : SingletonGameObject<MainManager>
 
 		m_player = new Player();
 		m_player.Init();
+		m_player.GetAirPlaneController().SetLatLon(Earth.Instance().GetAirportLatLon(24));
+		Earth.Instance().LoadTerrainByLatLon(Earth.Instance().GetAirportLatLon(24));
 
 		CameraManager.Instance();
 	}

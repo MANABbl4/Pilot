@@ -101,6 +101,7 @@ public class Earth : SingletonGameObject<Earth>
 
 		float h = 63.5f;
 		Vector3 c = GetCenter();
+		float r = GetRadius();
 
 		MeshFilter mf = plane.GetComponent<MeshFilter>();
 		if (mf != null)
@@ -116,6 +117,11 @@ public class Earth : SingletonGameObject<Earth>
 				vertices[k].y += h;
 				Vector3 d = (vertices[k] - c).normalized;
 				vertices[k] = d * (h + (terrainData[i][j] - min) / 10000);
+
+				if ((i == 0 && (j == 0 || j == 127 || j == 15 || j == 31 || j == 47 || j == 63 || j == 79 || j == 95 || j == 111)))
+				{
+					Debug.Log("pos[" + i + "][" + j + "] = " + vertices[k] + " latlon(up) = " + vertices[k].GetLatLon(Earth.Instance().GetCenter(), Vector3.forward));
+				}
 			}
 
 			m.vertices = vertices;
@@ -142,7 +148,7 @@ public class Earth : SingletonGameObject<Earth>
 
 				plane.transform.rotation = Quaternion.identity;
 				plane.transform.position = GetCenter();
-				plane.transform.localScale = new Vector3(1.0f, 1.0f, 1.0f);
+				plane.transform.localScale = Vector3.one;
 
 				return plane;
 			}
@@ -197,6 +203,18 @@ public class Earth : SingletonGameObject<Earth>
 		return data;
 	}
 
+	public void LoadTerrainByLatLon(Vector2 latLon)
+	{
+		//1. Check need loading
+		//1yes.1. Calc loading texture
+		//1yes.2. Load 5 * 5 = 25 textures 514*514 pixels with center texture in player position
+		//1no.1. Check need recalc plane
+		//1no.1yes. recalc
+		//1no.1no. do nothing
+
+
+	}
+
 	private void Update()
 	{
 	}
@@ -207,6 +225,10 @@ public class Earth : SingletonGameObject<Earth>
 	private List<Vector2> m_airportsLatLon;
 	[SerializeField]
 	private float m_g = 10.0f;
+	[SerializeField]
+	private int m_detailsLevel = 3;
 
 	private List<GameObject> m_airports = new List<GameObject>();
+	private Dictionary<string, Dictionary<int, Dictionary<int, Dictionary<int, List<List<ushort>>>>>> m_terrainData = 
+		new Dictionary<string, Dictionary<int, Dictionary<int, Dictionary<int, List<List<ushort>>>>>>();
 }

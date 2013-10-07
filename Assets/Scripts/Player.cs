@@ -26,9 +26,7 @@ public class Player
 				m_airplane.name = resource.name;
 
 				m_controller = m_airplane.GetComponent<AirPlainController>();
-				m_controller.SetLatLon(Earth.Instance().GetAirportLatLon(24));
 
-				//m_airplane.transform.position = Earth.Instance().GetAirports()[3].transform.position;//new Vector3(0.0f, 0.0f, -62.0f);
 				m_airplane.transform.rotation = Quaternion.identity;
 				m_airplane.transform.LookAt(Earth.Instance().GetCenter());
 				m_airplane.transform.Rotate(new Vector3(90.0f, 270.0f, 0.0f));
