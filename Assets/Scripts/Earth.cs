@@ -48,6 +48,10 @@ public class Earth : SingletonGameObject<Earth>
 
 		InitAirports();
 
+		m_cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+		m_cube.transform.localScale = Vector3.one;
+		m_cube.transform.position = GetCenter();
+
 		List<List<ushort>> data = null;
 		Quaternion rot = Quaternion.identity;
 
@@ -217,6 +221,63 @@ public class Earth : SingletonGameObject<Earth>
 
 	private void Update()
 	{
+		if (m_cube != null)
+		{
+			RaycastHit hit;
+			Vector3 pos = MainManager.Instance().GetPlayer().GetAirPlane().transform.position;
+			Ray ray = new Ray(pos, GetCenter() - pos);
+			if (m_cube.collider.Raycast(ray, out hit, (GetCenter() - pos).magnitude))
+			{
+				//Debug.Log(hit.point);
+				//Debug.DrawLine(ray.origin, hit.point);
+				float x = 0.0f;
+				float y = 0.0f;
+				string name = "";
+				if (hit.point.x == 0.5f)
+				{
+					name = "pos_x/";
+					x = hit.point.z;
+					y = hit.point.y;
+				}
+				if (hit.point.x == -0.5f)
+				{
+					name = "neg_x/";
+					x = hit.point.z;
+					y = hit.point.y;
+				}
+
+				if (hit.point.z == 0.5f)
+				{
+					name = "pos_z/";
+					x = hit.point.x;
+					y = hit.point.y;
+				}
+				if (hit.point.z == -0.5f)
+				{
+					name = "neg_z/";
+					x = hit.point.x;
+					y = hit.point.y;
+				}
+
+				if (hit.point.y == 0.5f)
+				{
+					name = "pos_y/";
+					x = hit.point.x;
+					y = hit.point.z;
+				}
+				if (hit.point.y == -0.5f)
+				{
+					name = "neg_y/";
+					x = hit.point.x;
+					y = hit.point.z;
+				}
+
+				int count = (int)Mathf.Pow(2, m_detailsLevel);
+
+				name += m_detailsLevel + "_" + (int)(count * (x + 0.5f)) + "_" + (int)(count * (y + 0.5f)) + ".raw";
+				Debug.Log(name);
+			}
+		}
 	}
 
 	[SerializeField]
@@ -231,4 +292,5 @@ public class Earth : SingletonGameObject<Earth>
 	private List<GameObject> m_airports = new List<GameObject>();
 	private Dictionary<string, Dictionary<int, Dictionary<int, Dictionary<int, List<List<ushort>>>>>> m_terrainData = 
 		new Dictionary<string, Dictionary<int, Dictionary<int, Dictionary<int, List<List<ushort>>>>>>();
+	private GameObject m_cube = null;
 }
