@@ -7,6 +7,14 @@ using System.IO;
 
 public class Earth : SingletonGameObject<Earth>
 {
+	private class TerrainTextureInfo
+	{
+		public int m_x = 0;
+		public int m_y = 0;
+		public string m_side = string.Empty;
+		public string m_path = string.Empty;
+	}
+
 	[System.Diagnostics.Conditional("DEBUG_EARTH")]
 	private static void Log(string msg)
 	{
@@ -105,7 +113,7 @@ public class Earth : SingletonGameObject<Earth>
 
 		float h = 63.5f;
 		Vector3 c = GetCenter();
-		float r = GetRadius();
+		//float r = GetRadius();
 
 		MeshFilter mf = plane.GetComponent<MeshFilter>();
 		if (mf != null)
@@ -219,63 +227,91 @@ public class Earth : SingletonGameObject<Earth>
 
 	}
 
+	private TerrainTextureInfo GetTerrainTexture(Vector3 pos)
+	{
+		TerrainTextureInfo info = new TerrainTextureInfo();
+
+		RaycastHit hit;
+		Ray ray = new Ray(pos, GetCenter() - pos);
+		if (m_cube.collider.Raycast(ray, out hit, (GetCenter() - pos).magnitude))
+		{
+			float x = 0.0f;
+			float y = 0.0f;
+			if (hit.point.x == 0.5f)
+			{
+				info.m_side = "pos_z/";
+				x = hit.point.z;
+				y = hit.point.y;
+			}
+			if (hit.point.x == -0.5f)
+			{
+				info.m_side = "neg_z/";
+				x = hit.point.z;
+				y = hit.point.y;
+			}
+
+			if (hit.point.z == 0.5f)
+			{
+				info.m_side = "pos_x/";
+				x = hit.point.x;
+				y = hit.point.y;
+			}
+			if (hit.point.z == -0.5f)
+			{
+				info.m_side = "neg_x/";
+				x = hit.point.x;
+				y = -hit.point.y;
+			}
+
+			if (hit.point.y == 0.5f)
+			{
+				info.m_side = "pos_y/";
+				x = hit.point.x;
+				y = hit.point.z;
+			}
+			if (hit.point.y == -0.5f)
+			{
+				info.m_side = "neg_y/";
+				x = hit.point.x;
+				y = hit.point.z;
+			}
+
+			int count = (int)Mathf.Pow(2, m_detailsLevel);
+
+			info.m_x = (int)(count * (x + 0.5f));
+			info.m_y = (int)(count * (y + 0.5f));
+			info.m_path = info.m_side + m_detailsLevel + "_" + info.m_x + "_" + info.m_y + ".raw";
+
+			return info;
+		}
+
+		return null;
+	}
+
+	private string[] GetAroundTextures(TerrainTextureInfo info)
+	{
+		string[] textures = null;
+
+		return textures;
+	}
+
 	private void Update()
 	{
 		if (m_cube != null)
 		{
-			RaycastHit hit;
-			Vector3 pos = MainManager.Instance().GetPlayer().GetAirPlane().transform.position;
-			Ray ray = new Ray(pos, GetCenter() - pos);
-			if (m_cube.collider.Raycast(ray, out hit, (GetCenter() - pos).magnitude))
+			TerrainTextureInfo info = GetTerrainTexture(MainManager.Instance().GetPlayer().GetAirPlane().transform.position);
+			if (info == null)
 			{
-				//Debug.Log(hit.point);
-				//Debug.DrawLine(ray.origin, hit.point);
-				float x = 0.0f;
-				float y = 0.0f;
-				string name = "";
-				if (hit.point.x == 0.5f)
-				{
-					name = "pos_x/";
-					x = hit.point.z;
-					y = hit.point.y;
-				}
-				if (hit.point.x == -0.5f)
-				{
-					name = "neg_x/";
-					x = hit.point.z;
-					y = hit.point.y;
-				}
+				//TODO:
+				return;
+			}
 
-				if (hit.point.z == 0.5f)
-				{
-					name = "pos_z/";
-					x = hit.point.x;
-					y = hit.point.y;
-				}
-				if (hit.point.z == -0.5f)
-				{
-					name = "neg_z/";
-					x = hit.point.x;
-					y = hit.point.y;
-				}
+			if (m_textureName != info.m_path)
+			{
+				m_textureName = info.m_path;
+				GetAroundTextures(info);
 
-				if (hit.point.y == 0.5f)
-				{
-					name = "pos_y/";
-					x = hit.point.x;
-					y = hit.point.z;
-				}
-				if (hit.point.y == -0.5f)
-				{
-					name = "neg_y/";
-					x = hit.point.x;
-					y = hit.point.z;
-				}
-
-				int count = (int)Mathf.Pow(2, m_detailsLevel);
-
-				name += m_detailsLevel + "_" + (int)(count * (x + 0.5f)) + "_" + (int)(count * (y + 0.5f)) + ".raw";
-				Debug.Log(name);
+				Debug.Log(m_textureName);
 			}
 		}
 	}
@@ -287,10 +323,11 @@ public class Earth : SingletonGameObject<Earth>
 	[SerializeField]
 	private float m_g = 10.0f;
 	[SerializeField]
-	private int m_detailsLevel = 3;
+	private int m_detailsLevel = 1;
 
 	private List<GameObject> m_airports = new List<GameObject>();
 	private Dictionary<string, Dictionary<int, Dictionary<int, Dictionary<int, List<List<ushort>>>>>> m_terrainData = 
 		new Dictionary<string, Dictionary<int, Dictionary<int, Dictionary<int, List<List<ushort>>>>>>();
 	private GameObject m_cube = null;
+	private string m_textureName = string.Empty;
 }
