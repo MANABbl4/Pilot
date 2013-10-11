@@ -241,20 +241,20 @@ public class Earth : SingletonGameObject<Earth>
 			{
 				info.m_side = "pos_z/";
 				x = hit.point.z;
-				y = hit.point.y;
+				y = -hit.point.y;
 			}
 			if (hit.point.x == -0.5f)
 			{
 				info.m_side = "neg_z/";
-				x = hit.point.z;
-				y = hit.point.y;
+				x = -hit.point.z;
+				y = -hit.point.y;
 			}
 
 			if (hit.point.z == 0.5f)
 			{
 				info.m_side = "pos_x/";
-				x = hit.point.x;
-				y = hit.point.y;
+				x = -hit.point.x;
+				y = -hit.point.y;
 			}
 			if (hit.point.z == -0.5f)
 			{
@@ -266,14 +266,14 @@ public class Earth : SingletonGameObject<Earth>
 			if (hit.point.y == 0.5f)
 			{
 				info.m_side = "pos_y/";
-				x = hit.point.x;
+				x = -hit.point.x;
 				y = hit.point.z;
 			}
 			if (hit.point.y == -0.5f)
 			{
 				info.m_side = "neg_y/";
-				x = hit.point.x;
-				y = hit.point.z;
+				x = hit.point.z;
+				y = -hit.point.x;
 			}
 
 			int count = (int)Mathf.Pow(2, m_detailsLevel);
@@ -288,9 +288,192 @@ public class Earth : SingletonGameObject<Earth>
 		return null;
 	}
 
+	private string GetSideLeft(string curSide)
+	{
+		if (curSide == "pos_x/")
+		{
+			return "pos_z/";
+		}
+		else if (curSide == "pos_y/")
+		{
+			return "neg_x/";
+		}
+		else if (curSide == "pos_z/")
+		{
+			return "neg_x/";
+		}
+		else if (curSide == "neg_x/")
+		{
+			return "neg_z/";
+		}
+		else if (curSide == "neg_y/")
+		{
+			return "neg_x/";
+		}
+		else if (curSide == "neg_z/")
+		{
+			return "pos_x/";
+		}
+
+		return string.Empty;
+	}
+
+	private string GetSideRight(string curSide)
+	{
+		if (curSide == "pos_x/")
+		{
+			return "neg_z/";
+		}
+		else if (curSide == "pos_y/")
+		{
+			return "pos_x/";
+		}
+		else if (curSide == "pos_z/")
+		{
+			return "pos_x/";
+		}
+		else if (curSide == "neg_x/")
+		{
+			return "pos_z/";
+		}
+		else if (curSide == "neg_y/")
+		{
+			return "pos_x/";
+		}
+		else if (curSide == "neg_z/")
+		{
+			return "neg_x/";
+		}
+
+		return string.Empty;
+	}
+
+	private string GetSideUp(string curSide)
+	{
+		if (curSide == "pos_x/")
+		{
+			return "pos_y/";
+		}
+		else if (curSide == "pos_y/")
+		{
+			return "neg_z/";
+		}
+		else if (curSide == "pos_z/")
+		{
+			return "pos_y/";
+		}
+		else if (curSide == "neg_x/")
+		{
+			return "pos_y/";
+		}
+		else if (curSide == "neg_y/")
+		{
+			return "pos_z/";
+		}
+		else if (curSide == "neg_z/")
+		{
+			return "pos_y/";
+		}
+
+		return string.Empty;
+	}
+
+	private string GetSideDown(string curSide)
+	{
+		if (curSide == "pos_x/")
+		{
+			return "neg_y/";
+		}
+		else if (curSide == "pos_y/")
+		{
+			return "pos_z/";
+		}
+		else if (curSide == "pos_z/")
+		{
+			return "neg_y/";
+		}
+		else if (curSide == "neg_x/")
+		{
+			return "neg_y/";
+		}
+		else if (curSide == "neg_y/")
+		{
+			return "neg_z/";
+		}
+		else if (curSide == "neg_z/")
+		{
+			return "neg_y/";
+		}
+
+		return string.Empty;
+	}
+
 	private string[] GetAroundTextures(TerrainTextureInfo info)
 	{
 		string[] textures = null;
+
+		int count = (int)Mathf.Pow(2, m_detailsLevel);
+
+		if (info.m_x == 0)
+		{
+			textures = new string[7];
+			string side = GetSideLeft(info.m_side);
+			if (side.Length == 0)
+			{
+				return null;
+			}
+			textures[0] = info.m_side + m_detailsLevel + "_" + (info.m_x + 1) + "_" + (info.m_y + 1) + ".raw";
+			textures[1] = info.m_side + m_detailsLevel + "_" + (info.m_x + 1) + "_" + (info.m_y + 0) + ".raw";
+			textures[2] = info.m_side + m_detailsLevel + "_" + (info.m_x + 0) + "_" + (info.m_y + 1) + ".raw";
+		}
+		else if (info.m_x == count - 1)
+		{
+			textures = new string[7];
+			string side = GetSideLeft(info.m_side);
+			if (side.Length == 0)
+			{
+				return null;
+			}
+			textures[0] = info.m_side + m_detailsLevel + "_" + (info.m_x + 1) + "_" + (info.m_y + 1) + ".raw";
+			textures[1] = info.m_side + m_detailsLevel + "_" + (info.m_x + 1) + "_" + (info.m_y + 0) + ".raw";
+			textures[2] = info.m_side + m_detailsLevel + "_" + (info.m_x + 0) + "_" + (info.m_y + 1) + ".raw";
+		}
+		else if (info.m_y == 0)
+		{
+			textures = new string[7];
+			string side = GetSideLeft(info.m_side);
+			if (side.Length == 0)
+			{
+				return null;
+			}
+			textures[0] = info.m_side + m_detailsLevel + "_" + (info.m_x + 1) + "_" + (info.m_y + 1) + ".raw";
+			textures[1] = info.m_side + m_detailsLevel + "_" + (info.m_x + 1) + "_" + (info.m_y + 0) + ".raw";
+			textures[2] = info.m_side + m_detailsLevel + "_" + (info.m_x + 0) + "_" + (info.m_y + 1) + ".raw";
+		}
+		else if (info.m_y == count - 1)
+		{
+			textures = new string[7];
+			string side = GetSideLeft(info.m_side);
+			if (side.Length == 0)
+			{
+				return null;
+			}
+			textures[0] = info.m_side + m_detailsLevel + "_" + (info.m_x + 1) + "_" + (info.m_y + 1) + ".raw";
+			textures[1] = info.m_side + m_detailsLevel + "_" + (info.m_x + 1) + "_" + (info.m_y + 0) + ".raw";
+			textures[2] = info.m_side + m_detailsLevel + "_" + (info.m_x + 0) + "_" + (info.m_y + 1) + ".raw";
+		}
+		else
+		{
+			textures = new string[8];
+			textures[0] = info.m_side + m_detailsLevel + "_" + (info.m_x - 1) + "_" + (info.m_y - 1) + ".raw";
+			textures[1] = info.m_side + m_detailsLevel + "_" + (info.m_x + 1) + "_" + (info.m_y + 1) + ".raw";
+			textures[2] = info.m_side + m_detailsLevel + "_" + (info.m_x - 1) + "_" + (info.m_y + 1) + ".raw";
+			textures[3] = info.m_side + m_detailsLevel + "_" + (info.m_x + 1) + "_" + (info.m_y - 1) + ".raw";
+			textures[4] = info.m_side + m_detailsLevel + "_" + (info.m_x + 1) + "_" + (info.m_y - 0) + ".raw";
+			textures[5] = info.m_side + m_detailsLevel + "_" + (info.m_x - 1) + "_" + (info.m_y - 0) + ".raw";
+			textures[6] = info.m_side + m_detailsLevel + "_" + (info.m_x - 0) + "_" + (info.m_y + 1) + ".raw";
+			textures[7] = info.m_side + m_detailsLevel + "_" + (info.m_x - 0) + "_" + (info.m_y - 1) + ".raw";
+		}
 
 		return textures;
 	}
@@ -300,18 +483,12 @@ public class Earth : SingletonGameObject<Earth>
 		if (m_cube != null)
 		{
 			TerrainTextureInfo info = GetTerrainTexture(MainManager.Instance().GetPlayer().GetAirPlane().transform.position);
-			if (info == null)
+			if (info != null && m_currentTerrainTexture != info.m_path)
 			{
-				//TODO:
-				return;
-			}
-
-			if (m_textureName != info.m_path)
-			{
-				m_textureName = info.m_path;
+				m_currentTerrainTexture = info.m_path;
 				GetAroundTextures(info);
 
-				Debug.Log(m_textureName);
+				Debug.Log(m_currentTerrainTexture);
 			}
 		}
 	}
@@ -326,8 +503,7 @@ public class Earth : SingletonGameObject<Earth>
 	private int m_detailsLevel = 1;
 
 	private List<GameObject> m_airports = new List<GameObject>();
-	private Dictionary<string, Dictionary<int, Dictionary<int, Dictionary<int, List<List<ushort>>>>>> m_terrainData = 
-		new Dictionary<string, Dictionary<int, Dictionary<int, Dictionary<int, List<List<ushort>>>>>>();
+	private Dictionary<string, List<List<ushort>>> m_terrainData = new Dictionary<string, List<List<ushort>>>();
 	private GameObject m_cube = null;
-	private string m_textureName = string.Empty;
+	private string m_currentTerrainTexture = string.Empty;
 }
