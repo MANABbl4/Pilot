@@ -109,7 +109,7 @@ public class Earth : SingletonGameObject<Earth>
 
 	private void InitTerrain(GameObject plane, List<List<ushort>> terrainData, Quaternion rot)
 	{
-		ushort min = 0;
+		float min = 0;
 
 		float h = 63.5f;
 		Vector3 c = GetCenter();
@@ -288,7 +288,7 @@ public class Earth : SingletonGameObject<Earth>
 		return null;
 	}
 
-	private string GetSideLeft(string curSide)
+	/*private string GetSideLeft(string curSide)
 	{
 		if (curSide == "pos_x/")
 		{
@@ -406,76 +406,67 @@ public class Earth : SingletonGameObject<Earth>
 		}
 
 		return string.Empty;
-	}
+	}*/
 
 	private string[] GetAroundTextures(TerrainTextureInfo info)
 	{
-		string[] textures = null;
-
 		int count = (int)Mathf.Pow(2, m_detailsLevel);
+		List<string> textures = new List<string>();
 
-		if (info.m_x == 0)
+		//объект фэйково переместить в нужные стороны и вычислить текстуры
+
+		/*if (info.m_x == 0)
 		{
-			textures = new string[7];
-			string side = GetSideLeft(info.m_side);
-			if (side.Length == 0)
+			string sideX = GetSideLeft(info.m_side);
+			if (sideX.Length == 0)
 			{
 				return null;
 			}
-			textures[0] = info.m_side + m_detailsLevel + "_" + (info.m_x + 1) + "_" + (info.m_y + 1) + ".raw";
-			textures[1] = info.m_side + m_detailsLevel + "_" + (info.m_x + 1) + "_" + (info.m_y + 0) + ".raw";
-			textures[2] = info.m_side + m_detailsLevel + "_" + (info.m_x + 0) + "_" + (info.m_y + 1) + ".raw";
+			textures.Add(sideX + m_detailsLevel + "_" + (count - 1) + "_" + (info.m_y) + ".raw");
+			textures.Add(info.m_side + m_detailsLevel + "_" + (info.m_x + 1) + "_" + (info.m_y) + ".raw");
+
+			if (info.m_y == 0)
+			{
+				string sideY = GetSideUp(info.m_side);
+				if (sideY.Length == 0)
+				{
+					return null;
+				}
+
+				textures.Add(sideY + m_detailsLevel + "_" + (count - 1) + "_" + (info.m_y + 0) + ".raw");
+			}
+			else if (info.m_y == count - 1)
+			{
+
+			}
+			else
+			{
+
+			}
 		}
 		else if (info.m_x == count - 1)
 		{
-			textures = new string[7];
-			string side = GetSideLeft(info.m_side);
+			string side = GetSideRight(info.m_side);
 			if (side.Length == 0)
 			{
 				return null;
 			}
-			textures[0] = info.m_side + m_detailsLevel + "_" + (info.m_x + 1) + "_" + (info.m_y + 1) + ".raw";
-			textures[1] = info.m_side + m_detailsLevel + "_" + (info.m_x + 1) + "_" + (info.m_y + 0) + ".raw";
-			textures[2] = info.m_side + m_detailsLevel + "_" + (info.m_x + 0) + "_" + (info.m_y + 1) + ".raw";
-		}
-		else if (info.m_y == 0)
-		{
-			textures = new string[7];
-			string side = GetSideLeft(info.m_side);
-			if (side.Length == 0)
-			{
-				return null;
-			}
-			textures[0] = info.m_side + m_detailsLevel + "_" + (info.m_x + 1) + "_" + (info.m_y + 1) + ".raw";
-			textures[1] = info.m_side + m_detailsLevel + "_" + (info.m_x + 1) + "_" + (info.m_y + 0) + ".raw";
-			textures[2] = info.m_side + m_detailsLevel + "_" + (info.m_x + 0) + "_" + (info.m_y + 1) + ".raw";
-		}
-		else if (info.m_y == count - 1)
-		{
-			textures = new string[7];
-			string side = GetSideLeft(info.m_side);
-			if (side.Length == 0)
-			{
-				return null;
-			}
-			textures[0] = info.m_side + m_detailsLevel + "_" + (info.m_x + 1) + "_" + (info.m_y + 1) + ".raw";
-			textures[1] = info.m_side + m_detailsLevel + "_" + (info.m_x + 1) + "_" + (info.m_y + 0) + ".raw";
-			textures[2] = info.m_side + m_detailsLevel + "_" + (info.m_x + 0) + "_" + (info.m_y + 1) + ".raw";
 		}
 		else
 		{
-			textures = new string[8];
-			textures[0] = info.m_side + m_detailsLevel + "_" + (info.m_x - 1) + "_" + (info.m_y - 1) + ".raw";
-			textures[1] = info.m_side + m_detailsLevel + "_" + (info.m_x + 1) + "_" + (info.m_y + 1) + ".raw";
-			textures[2] = info.m_side + m_detailsLevel + "_" + (info.m_x - 1) + "_" + (info.m_y + 1) + ".raw";
-			textures[3] = info.m_side + m_detailsLevel + "_" + (info.m_x + 1) + "_" + (info.m_y - 1) + ".raw";
-			textures[4] = info.m_side + m_detailsLevel + "_" + (info.m_x + 1) + "_" + (info.m_y - 0) + ".raw";
-			textures[5] = info.m_side + m_detailsLevel + "_" + (info.m_x - 1) + "_" + (info.m_y - 0) + ".raw";
-			textures[6] = info.m_side + m_detailsLevel + "_" + (info.m_x - 0) + "_" + (info.m_y + 1) + ".raw";
-			textures[7] = info.m_side + m_detailsLevel + "_" + (info.m_x - 0) + "_" + (info.m_y - 1) + ".raw";
-		}
+			textures.Add(info.m_side + m_detailsLevel + "_" + (info.m_x - 1) + "_" + (info.m_y - 1) + ".raw");
+			textures.Add(info.m_side + m_detailsLevel + "_" + (info.m_x + 1) + "_" + (info.m_y + 1) + ".raw");
+			textures.Add(info.m_side + m_detailsLevel + "_" + (info.m_x - 1) + "_" + (info.m_y + 1) + ".raw");
+			textures.Add(info.m_side + m_detailsLevel + "_" + (info.m_x + 1) + "_" + (info.m_y - 1) + ".raw");
+			textures.Add(info.m_side + m_detailsLevel + "_" + (info.m_x + 1) + "_" + (info.m_y) + ".raw");
+			textures.Add(info.m_side + m_detailsLevel + "_" + (info.m_x - 1) + "_" + (info.m_y) + ".raw");
+			textures.Add(info.m_side + m_detailsLevel + "_" + (info.m_x) + "_" + (info.m_y + 1) + ".raw");
+			textures.Add(info.m_side + m_detailsLevel + "_" + (info.m_x) + "_" + (info.m_y - 1) + ".raw");
+		}*/
+		
+		
 
-		return textures;
+		return textures.ToArray();
 	}
 
 	private void Update()
