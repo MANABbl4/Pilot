@@ -47,6 +47,7 @@
      <Compile Include="Assets\Scripts\Controllers\AirPlainController.cs" />
      <Compile Include="Assets\Scripts\Controllers\TerrainController.cs" />
      <Compile Include="Assets\Scripts\Earth.cs" />
+     <Compile Include="Assets\Scripts\HUD\HUDRect.cs" />
      <Compile Include="Assets\Scripts\Main.cs" />
      <Compile Include="Assets\Scripts\Managers\CameraManager.cs" />
      <Compile Include="Assets\Scripts\Managers\MainManager.cs" />

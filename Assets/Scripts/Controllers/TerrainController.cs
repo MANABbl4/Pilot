@@ -31,24 +31,24 @@ public class TerrainController
         Quaternion rot = Quaternion.identity;
 
         data = LoadTerrain("Assets/Textures/Earth_bump/neg_y/0_0_0.raw", 128, 128);
-        rot = Quaternion.Euler(Vector3.up * 180.0f) * Quaternion.FromToRotation(Vector3.up, Vector3.down);
+        rot = Quaternion.FromToRotation(Vector3.up, Vector3.down) * Quaternion.FromToRotation(Vector3.back, Vector3.left);
         InitTerrain(InitPlane(), data, rot);
         data = LoadTerrain("Assets/Textures/Earth_bump/pos_y/0_0_0.raw", 128, 128);
-        rot = Quaternion.FromToRotation(Vector3.up, Vector3.up);
+        rot = Quaternion.FromToRotation(Vector3.up, Vector3.up) * Quaternion.FromToRotation(Vector3.back, Vector3.left);
         InitTerrain(InitPlane(), data, rot);
 
-        data = LoadTerrain("Assets/Textures/Earth_bump/neg_z/0_0_0.raw", 128, 128);
-        rot = Quaternion.FromToRotation(Vector3.up, Vector3.back);//Quaternion.Euler(Vector3.left * 180.0f) * Quaternion.Euler(Vector3.forward * 90.0f);
-        InitTerrain(InitPlane(), data, rot);
         data = LoadTerrain("Assets/Textures/Earth_bump/pos_z/0_0_0.raw", 128, 128);
-        rot = Quaternion.FromToRotation(Vector3.up, Vector3.forward);//Quaternion.Euler(Vector3.back * 90.0f);
+        rot = Quaternion.FromToRotation(Vector3.up, Vector3.forward) * Quaternion.FromToRotation(Vector3.right, Vector3.forward);
+        InitTerrain(InitPlane(), data, rot);
+        data = LoadTerrain("Assets/Textures/Earth_bump/neg_z/0_0_0.raw", 128, 128);
+        rot = Quaternion.FromToRotation(Vector3.up, Vector3.back) * Quaternion.FromToRotation(Vector3.right, Vector3.back);
         InitTerrain(InitPlane(), data, rot);
 
         data = LoadTerrain("Assets/Textures/Earth_bump/neg_x/0_0_0.raw", 128, 128);
-        rot = Quaternion.FromToRotation(Vector3.up, Vector3.left);//Quaternion.Euler(Vector3.forward * -90.0f) * Quaternion.Euler(Vector3.left * 90.0f);
+        rot = Quaternion.FromToRotation(Vector3.up, Vector3.left) * Quaternion.FromToRotation(Vector3.right, Vector3.left);
         InitTerrain(InitPlane(), data, rot);
         data = LoadTerrain("Assets/Textures/Earth_bump/pos_x/0_0_0.raw", 128, 128);
-        rot = Quaternion.FromToRotation(Vector3.up, Vector3.right);//Quaternion.Euler(Vector3.forward * -90.0f) * Quaternion.Euler(Vector3.right * 90.0f);
+        rot = Quaternion.FromToRotation(Vector3.up, Vector3.right) * Quaternion.FromToRotation(Vector3.right, Vector3.right);
         InitTerrain(InitPlane(), data, rot);
     }
 
