@@ -26,13 +26,23 @@ public class CameraManager : SingletonGameObject<CameraManager>
 
 	private void UpdateCameraPos()
 	{
-		Vector3 airplanePos = MainManager.Instance().GetPlayer().GetAirPlane().transform.position;
-		Camera.main.transform.position = Earth.Instance().GetCenter();
-		Camera.main.transform.Translate(airplanePos + airplanePos.normalized * m_heightOffset * m_curZoom, Space.World);
+        GameObject curAirPlane = MainManager.Instance().GetPlayer().GetAirPlane();
+        if (curAirPlane != null)
+        {
+            Vector3 airplanePos = curAirPlane.transform.position;
+            Camera.main.transform.position = Earth.Instance().GetCenter();
+            Camera.main.transform.Translate(airplanePos + airplanePos.normalized * m_heightOffset * m_curZoom, Space.World);
 
-		Camera.main.transform.rotation = MainManager.Instance().GetPlayer().GetAirPlane().transform.rotation;
-		Camera.main.transform.rotation *= Quaternion.AngleAxis(90.0f, Vector3.right);
-		Camera.main.transform.rotation *= Quaternion.AngleAxis(180.0f, Vector3.forward);
+            Camera.main.transform.rotation = curAirPlane.transform.rotation;
+            Camera.main.transform.rotation *= Quaternion.AngleAxis(90.0f, Vector3.right);
+            Camera.main.transform.rotation *= Quaternion.AngleAxis(180.0f, Vector3.forward);
+        }
+        else
+        {
+            Camera.main.transform.position = Earth.Instance().GetCenter();
+            Camera.main.transform.Translate(Vector3.right * (2 * Earth.Instance().GetRadius()), Space.World);
+            Camera.main.transform.LookAt(Earth.Instance().GetCenter());
+        }
 	}
 
 	private void UpdateZoom()

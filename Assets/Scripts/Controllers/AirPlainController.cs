@@ -7,9 +7,10 @@ public class AirPlainController : MonoBehaviour
 	{
 		m_curLatLon = latLon;
 		gameObject.transform.position = m_curLatLon.SetPositionByLatLon(gameObject.transform, Earth.Instance().GetCenter(), Earth.Instance().GetRadius() + m_height);
-		
-		gameObject.transform.LookAt(Earth.Instance().GetCenter());
-		gameObject.transform.rotation *= Quaternion.Euler(m_startRot);
+
+        gameObject.transform.rotation = Quaternion.identity;
+        gameObject.transform.rotation *= Quaternion.Euler(m_startRot);
+        SetLookAt(Earth.Instance().GetCenter());
 	}
 
 	// Use this for initialization
@@ -19,8 +20,8 @@ public class AirPlainController : MonoBehaviour
 		m_screenCenter.x = Screen.width / 2;
 		m_screenCenter.y = Screen.height / 2;
 
-		gameObject.transform.LookAt(Earth.Instance().GetCenter());
 		gameObject.transform.rotation *= Quaternion.Euler(m_startRot);
+        SetLookAt(Earth.Instance().GetCenter());
 	}
 	
 	// Update is called once per frame
@@ -124,6 +125,13 @@ public class AirPlainController : MonoBehaviour
 		}*/
 #endif
 	}
+
+    private void SetLookAt(Vector3 pos)
+    {
+        Vector3 normal = (gameObject.transform.position - pos).normalized;
+        float angle = Vector3.Angle(gameObject.transform.up, normal);
+        gameObject.transform.rotation *= Quaternion.Euler(-angle, 0.0f, 0.0f);
+    }
 
 	private Vector2 m_curLatLon;
 	private Vector2 m_curRot;

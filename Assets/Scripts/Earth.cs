@@ -71,7 +71,10 @@ public class Earth : SingletonGameObject<Earth>
 
 	private void Update()
 	{
-        m_terrainController.Tick();
+        if (m_terrainController != null)
+        {
+            m_terrainController.Tick();
+        }
 	}
 
 	[SerializeField]

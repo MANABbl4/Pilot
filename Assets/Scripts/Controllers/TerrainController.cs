@@ -58,7 +58,7 @@ public class TerrainController
 
     public void Tick()
     {
-        if (m_cube != null)
+        if (m_cube != null && MainManager.Instance().GetPlayer().GetAirPlane() != null)
         {
             TerrainTextureInfo info = GetTerrainTexture(MainManager.Instance().GetPlayer().GetAirPlane().transform.position);
             if (info != null && m_currentTerrainTexture != info.m_path)
