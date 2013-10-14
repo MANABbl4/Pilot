@@ -31,6 +31,18 @@ public class MainManager : SingletonGameObject<MainManager>
 
     private void OnGUI()
     {
+		int offset = Screen.height / Earth.Instance().GetAirportsLatLon().Count;
+		int offsetBtn = 0;
+		foreach (Vector2 pos in Earth.Instance().GetAirportsLatLon())
+		{
+			if (GUI.Button(new Rect(0, offsetBtn, 50, offset), pos.ToString()) && MainManager.Instance().GetPlayer().GetAirPlane() != null)
+			{
+				m_player.GetAirPlaneController().SetLatLon(pos);
+			}
+
+			offsetBtn += offset;
+		}
+
         if (!m_started)
         {
             if (GUI.Button(m_loadBtnRect.GetRect(), m_loadBtnText))

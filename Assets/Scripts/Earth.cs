@@ -27,6 +27,11 @@ public class Earth : SingletonGameObject<Earth>
 		return m_airports;
 	}
 
+	public List<Vector2> GetAirportsLatLon()
+	{
+		return m_airportsLatLon;
+	}
+
 	public Vector2 GetAirportLatLon(int index)
 	{
 		return m_airportsLatLon[index];
