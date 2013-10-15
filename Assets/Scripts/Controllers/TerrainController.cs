@@ -306,8 +306,23 @@ public class TerrainController
 		return textures.ToArray();
 	}
 
+	private void PreComputeTerrainTextures()
+	{
+		for (int i = m_minDetailsLevel; i < m_maxDetailsLevel; ++i)
+		{
+			Dictionary<TerrainTextureInfo, List<TerrainTextureInfo>> levelTerrainTextures = new Dictionary<TerrainTextureInfo, List<TerrainTextureInfo>>();
+
+			//TODO calc info for level i
+
+			m_terrainTextures.Add(i, levelTerrainTextures);
+		}
+	}
+
 	private int m_detailsLevel = 1;
+	private int m_minDetailsLevel = 0;
+	private int m_maxDetailsLevel = 7;
 	private Dictionary<string, List<List<ushort>>> m_terrainData = new Dictionary<string, List<List<ushort>>>();
+	private Dictionary<int, Dictionary<TerrainTextureInfo, List<TerrainTextureInfo>>> m_terrainTextures = new Dictionary<int, Dictionary<TerrainTextureInfo, List<TerrainTextureInfo>>>();
 	private GameObject m_cube = null;
 	private string m_currentTerrainTexture = string.Empty;
 	private Vector3 m_center = Vector3.zero;
