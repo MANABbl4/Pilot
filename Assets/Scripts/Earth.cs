@@ -47,7 +47,7 @@ public class Earth : SingletonGameObject<Earth>
 
 		InitAirports();
 
-        m_terrainController.Init();
+		m_terrainController.Init(GetCenter(), GetRadius());
 	}
 
 	protected override void DeInit()

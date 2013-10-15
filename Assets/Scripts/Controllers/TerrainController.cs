@@ -21,11 +21,14 @@ public class TerrainController
 		Debug.Log("TerrainController. " + msg);
 	}
 
-	public void Init()
+	public void Init(Vector3 center, float radius)
 	{
+		m_center = center;
+		m_radius = radius;
+
 		m_cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
 		m_cube.transform.localScale = Vector3.one;
-		m_cube.transform.position = Earth.Instance().GetCenter();
+		m_cube.transform.position = m_center;
 
 		List<List<ushort>> data = null;
 		Quaternion rot = Quaternion.identity;
@@ -76,8 +79,8 @@ public class TerrainController
 		float min = 0;
 
 		float h = 63.5f;
-		Vector3 c = Earth.Instance().GetCenter();
-		//float r = GetRadius();
+		Vector3 c = m_center;
+		//float r = m_radius;
 
 		MeshFilter mf = plane.GetComponent<MeshFilter>();
 		if (mf != null)
@@ -96,7 +99,7 @@ public class TerrainController
 
 				if ((i == 0 && (j == 0 || j == 127 || j == 15 || j == 31 || j == 47 || j == 63 || j == 79 || j == 95 || j == 111)))
 				{
-					Debug.Log("pos[" + i + "][" + j + "] = " + vertices[k] + " latlon(up) = " + vertices[k].GetLatLon(Earth.Instance().GetCenter(), Vector3.forward));
+					Debug.Log("pos[" + i + "][" + j + "] = " + vertices[k] + " latlon(up) = " + vertices[k].GetLatLon(m_center, Vector3.forward));
 				}
 			}
 
@@ -107,7 +110,7 @@ public class TerrainController
 		}
 
 		plane.transform.rotation *= rot;
-		plane.transform.localScale = Vector3.one * Earth.Instance().GetRadius() / h;
+		plane.transform.localScale = Vector3.one * m_radius / h;
 	}
 
 	private GameObject InitPlane()
@@ -123,7 +126,7 @@ public class TerrainController
 				plane.name = resource.name;
 
 				plane.transform.rotation = Quaternion.identity;
-				plane.transform.position = Earth.Instance().GetCenter();
+				plane.transform.position = m_center;
 				plane.transform.localScale = Vector3.one;
 
 				return plane;
@@ -196,8 +199,8 @@ public class TerrainController
 		TerrainTextureInfo info = new TerrainTextureInfo();
 
 		RaycastHit hit;
-		Ray ray = new Ray(pos, Earth.Instance().GetCenter() - pos);
-		if (m_cube.collider.Raycast(ray, out hit, (Earth.Instance().GetCenter() - pos).magnitude))
+		Ray ray = new Ray(pos, m_center - pos);
+		if (m_cube.collider.Raycast(ray, out hit, (m_center - pos).magnitude))
 		{
 			float x = 0.0f;
 			float y = 0.0f;
@@ -230,14 +233,14 @@ public class TerrainController
 			if (hit.point.y == 0.5f)
 			{
 				info.m_side = "pos_y/";
-				x = -hit.point.x;
-				y = hit.point.z;
+				x = hit.point.x;
+				y = -hit.point.z;
 			}
 			if (hit.point.y == -0.5f)
 			{
 				info.m_side = "neg_y/";
-				x = hit.point.z;
-				y = -hit.point.x;
+				x = hit.point.x;
+				y = hit.point.z;
 			}
 
 			int count = (int)Mathf.Pow(2, m_detailsLevel);
@@ -257,56 +260,48 @@ public class TerrainController
 		int count = (int)Mathf.Pow(2, m_detailsLevel);
 		List<string> textures = new List<string>();
 
+		float edgeSize = 1.0f;
+		float halfEdgeSize = edgeSize / 2.0f;
+		float cellSize = edgeSize / (float)count;
+
+		Vector3 point = m_center;
+		if (info.m_side == "pos_x/")
+		{
+			point.x = halfEdgeSize;
+			point.y = halfEdgeSize - cellSize * (0.5f + (float)info.m_y);
+			point.z = -halfEdgeSize + cellSize * (0.5f + (float)info.m_x);
+		}
+		else if (info.m_side == "neg_x/")
+		{
+			point.x = -halfEdgeSize;
+			point.y = halfEdgeSize - cellSize * (0.5f + (float)info.m_y);
+			point.z = halfEdgeSize - cellSize * (0.5f + (float)info.m_x);
+		}
+		else if (info.m_side == "pos_z/")
+		{
+			point.z = halfEdgeSize;
+			point.y = halfEdgeSize - cellSize * (0.5f + (float)info.m_y);
+			point.x = halfEdgeSize - cellSize * (0.5f + (float)info.m_x);
+		}
+		else if (info.m_side == "neg_z/")
+		{
+			point.z = -halfEdgeSize;
+			point.y = halfEdgeSize - cellSize * (0.5f + (float)info.m_y);
+			point.x = -halfEdgeSize + cellSize * (0.5f + (float)info.m_x);
+		}
+		else if (info.m_side == "pos_y/")
+		{
+			point.y = halfEdgeSize;
+			point.z = halfEdgeSize - cellSize * (0.5f + (float)info.m_y);
+			point.x = -halfEdgeSize + cellSize * (0.5f + (float)info.m_x);
+		}
+		else if (info.m_side == "neg_y/")
+		{
+			point.y = -halfEdgeSize;
+			point.z = -halfEdgeSize + cellSize * (0.5f + (float)info.m_y);
+			point.x = -halfEdgeSize + cellSize * (0.5f + (float)info.m_x);
+		}
 		//объект фэйково переместить в нужные стороны и вычислить текстуры
-
-		/*if (info.m_x == 0)
-		{
-			string sideX = GetSideLeft(info.m_side);
-			if (sideX.Length == 0)
-			{
-				return null;
-			}
-			textures.Add(sideX + m_detailsLevel + "_" + (count - 1) + "_" + (info.m_y) + ".raw");
-			textures.Add(info.m_side + m_detailsLevel + "_" + (info.m_x + 1) + "_" + (info.m_y) + ".raw");
-
-			if (info.m_y == 0)
-			{
-				string sideY = GetSideUp(info.m_side);
-				if (sideY.Length == 0)
-				{
-					return null;
-				}
-
-				textures.Add(sideY + m_detailsLevel + "_" + (count - 1) + "_" + (info.m_y + 0) + ".raw");
-			}
-			else if (info.m_y == count - 1)
-			{
-
-			}
-			else
-			{
-
-			}
-		}
-		else if (info.m_x == count - 1)
-		{
-			string side = GetSideRight(info.m_side);
-			if (side.Length == 0)
-			{
-				return null;
-			}
-		}
-		else
-		{
-			textures.Add(info.m_side + m_detailsLevel + "_" + (info.m_x - 1) + "_" + (info.m_y - 1) + ".raw");
-			textures.Add(info.m_side + m_detailsLevel + "_" + (info.m_x + 1) + "_" + (info.m_y + 1) + ".raw");
-			textures.Add(info.m_side + m_detailsLevel + "_" + (info.m_x - 1) + "_" + (info.m_y + 1) + ".raw");
-			textures.Add(info.m_side + m_detailsLevel + "_" + (info.m_x + 1) + "_" + (info.m_y - 1) + ".raw");
-			textures.Add(info.m_side + m_detailsLevel + "_" + (info.m_x + 1) + "_" + (info.m_y) + ".raw");
-			textures.Add(info.m_side + m_detailsLevel + "_" + (info.m_x - 1) + "_" + (info.m_y) + ".raw");
-			textures.Add(info.m_side + m_detailsLevel + "_" + (info.m_x) + "_" + (info.m_y + 1) + ".raw");
-			textures.Add(info.m_side + m_detailsLevel + "_" + (info.m_x) + "_" + (info.m_y - 1) + ".raw");
-		}*/
 
 		return textures.ToArray();
 	}
@@ -315,4 +310,6 @@ public class TerrainController
 	private Dictionary<string, List<List<ushort>>> m_terrainData = new Dictionary<string, List<List<ushort>>>();
 	private GameObject m_cube = null;
 	private string m_currentTerrainTexture = string.Empty;
+	private Vector3 m_center = Vector3.zero;
+	private float m_radius = 0.0f;
 }
