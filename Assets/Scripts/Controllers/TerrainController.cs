@@ -13,6 +13,18 @@ public class TerrainController
 		public int m_y = 0;
 		public string m_side = string.Empty;
 		public string m_path = string.Empty;
+
+		public class Comparer : IEqualityComparer<TerrainTextureInfo>
+		{
+			public bool Equals(TerrainTextureInfo x, TerrainTextureInfo y)
+			{
+				return (x.m_path.Equals(y.m_path));
+			}
+			public int GetHashCode(TerrainTextureInfo x)
+			{
+				return x.m_path.GetHashCode() ^ x.m_path.GetHashCode();
+			}
+		}
 	}
 
 	[System.Diagnostics.Conditional("DEBUG_TERRAIN_CONTROLLER")]
@@ -29,6 +41,8 @@ public class TerrainController
 		m_cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
 		m_cube.transform.localScale = Vector3.one;
 		m_cube.transform.position = m_center;
+
+		PreComputeTerrainTextures();
 
 		List<List<ushort>> data = null;
 		Quaternion rot = Quaternion.identity;
@@ -63,13 +77,14 @@ public class TerrainController
 	{
 		if (m_cube != null && MainManager.Instance().GetPlayer().GetAirPlane() != null)
 		{
-			TerrainTextureInfo info = GetTerrainTexture(MainManager.Instance().GetPlayer().GetAirPlane().transform.position);
+			TerrainTextureInfo info = GetTerrainTexture(MainManager.Instance().GetPlayer().GetAirPlane().transform.position,
+				m_center, m_detailsLevel);
 			if (info != null && m_currentTerrainTexture != info.m_path)
 			{
 				m_currentTerrainTexture = info.m_path;
-				GetAroundTextures(info);
+				GetAroundTextures(info, m_detailsLevel);
 
-				Debug.Log(m_currentTerrainTexture);
+				Log(m_currentTerrainTexture);
 			}
 		}
 	}
@@ -97,10 +112,10 @@ public class TerrainController
 				Vector3 d = (vertices[k] - c).normalized;
 				vertices[k] = d * (h + (terrainData[i][j] - min) / 10000);
 
-				if ((i == 0 && (j == 0 || j == 127 || j == 15 || j == 31 || j == 47 || j == 63 || j == 79 || j == 95 || j == 111)))
+				/*if ((i == 0 && (j == 0 || j == 127 || j == 15 || j == 31 || j == 47 || j == 63 || j == 79 || j == 95 || j == 111)))
 				{
-					Debug.Log("pos[" + i + "][" + j + "] = " + vertices[k] + " latlon(up) = " + vertices[k].GetLatLon(m_center, Vector3.forward));
-				}
+					Log("pos[" + i + "][" + j + "] = " + vertices[k] + " latlon(up) = " + vertices[k].GetLatLon(m_center, Vector3.forward));
+				}*/
 			}
 
 			m.vertices = vertices;
@@ -177,7 +192,7 @@ public class TerrainController
 			}
 		}
 
-		Debug.Log("min " + min + " max " + max);
+		//Log("min " + min + " max " + max);
 
 		return data;
 	}
@@ -194,60 +209,60 @@ public class TerrainController
 
 	}
 
-	private TerrainTextureInfo GetTerrainTexture(Vector3 pos)
+	private TerrainTextureInfo GetTerrainTexture(Vector3 pos, Vector3 center, int detailsLevel)
 	{
 		TerrainTextureInfo info = new TerrainTextureInfo();
 
 		RaycastHit hit;
-		Ray ray = new Ray(pos, m_center - pos);
-		if (m_cube.collider.Raycast(ray, out hit, (m_center - pos).magnitude))
+		Ray ray = new Ray(pos, center - pos);
+		if (m_cube.collider.Raycast(ray, out hit, (center - pos).magnitude))
 		{
 			float x = 0.0f;
 			float y = 0.0f;
-			if (hit.point.z == 0.5f)
+			if (hit.point.z == m_cube.collider.bounds.extents.z)
 			{
 				info.m_side = "pos_z/";
 				x = hit.point.z;
 				y = -hit.point.y;
 			}
-			if (hit.point.z == -0.5f)
+			if (hit.point.z == -m_cube.collider.bounds.extents.z)
 			{
 				info.m_side = "neg_z/";
 				x = -hit.point.z;
 				y = -hit.point.y;
 			}
 
-			if (hit.point.x == 0.5f)
+			if (hit.point.x == m_cube.collider.bounds.extents.x)
 			{
 				info.m_side = "pos_x/";
 				x = -hit.point.x;
 				y = -hit.point.y;
 			}
-			if (hit.point.x == -0.5f)
+			if (hit.point.x == -m_cube.collider.bounds.extents.x)
 			{
 				info.m_side = "neg_x/";
 				x = hit.point.x;
 				y = -hit.point.y;
 			}
 
-			if (hit.point.y == 0.5f)
+			if (hit.point.y == m_cube.collider.bounds.extents.y)
 			{
 				info.m_side = "pos_y/";
 				x = hit.point.x;
 				y = -hit.point.z;
 			}
-			if (hit.point.y == -0.5f)
+			if (hit.point.y == -m_cube.collider.bounds.extents.y)
 			{
 				info.m_side = "neg_y/";
 				x = hit.point.x;
 				y = hit.point.z;
 			}
 
-			int count = (int)Mathf.Pow(2, m_detailsLevel);
+			float count = (int)Mathf.Pow(2, detailsLevel);
 
 			info.m_x = (int)(count * (x + 0.5f));
 			info.m_y = (int)(count * (y + 0.5f));
-			info.m_path = info.m_side + m_detailsLevel + "_" + info.m_x + "_" + info.m_y + ".raw";
+			info.m_path = info.m_side + detailsLevel + "_" + info.m_x + "_" + info.m_y + ".raw";
 
 			return info;
 		}
@@ -255,9 +270,20 @@ public class TerrainController
 		return null;
 	}
 
-	private string[] GetAroundTextures(TerrainTextureInfo info)
+	private List<TerrainTextureInfo> GetAroundTextures(TerrainTextureInfo info, int detailsLevel)
 	{
-		int count = (int)Mathf.Pow(2, m_detailsLevel);
+		if (!m_terrainTextures.ContainsKey(detailsLevel))
+		{
+			return null;
+		}
+
+		if (!m_terrainTextures[detailsLevel].ContainsKey(info))
+		{
+			return null;
+		}
+
+		return m_terrainTextures[detailsLevel][info];
+		/*int count = (int)Mathf.Pow(2, m_detailsLevel);
 		List<string> textures = new List<string>();
 
 		float edgeSize = 1.0f;
@@ -303,18 +329,29 @@ public class TerrainController
 		}
 		//объект фэйково переместить в нужные стороны и вычислить текстуры
 
-		return textures.ToArray();
+		return textures.ToArray();*/
+	}
+
+	private Dictionary<TerrainTextureInfo, List<TerrainTextureInfo>> PreComputeTerrainTexturesLevel(int detailsLevel)
+	{
+		Dictionary<TerrainTextureInfo, List<TerrainTextureInfo>> levelTerrainTextures = new Dictionary<TerrainTextureInfo, List<TerrainTextureInfo>>(new TerrainTextureInfo.Comparer());
+
+		//calc all points and call GetTerrainTexture
+		Vector3 pos = Vector3.forward;
+		pos.x = 0.49f;
+		pos.y = 0.49f;
+		TerrainTextureInfo info = GetTerrainTexture(pos, m_center, detailsLevel);
+
+		Log(info == null ? "null path" : info.m_path);
+
+		return levelTerrainTextures;
 	}
 
 	private void PreComputeTerrainTextures()
 	{
 		for (int i = m_minDetailsLevel; i < m_maxDetailsLevel; ++i)
 		{
-			Dictionary<TerrainTextureInfo, List<TerrainTextureInfo>> levelTerrainTextures = new Dictionary<TerrainTextureInfo, List<TerrainTextureInfo>>();
-
-			//TODO calc info for level i
-
-			m_terrainTextures.Add(i, levelTerrainTextures);
+			m_terrainTextures.Add(i, PreComputeTerrainTexturesLevel(i));
 		}
 	}
 
