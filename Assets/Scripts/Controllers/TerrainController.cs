@@ -222,26 +222,26 @@ public class TerrainController
 			if (hit.point.z == m_cube.collider.bounds.extents.z)
 			{
 				info.m_side = "pos_z/";
-				x = hit.point.z;
+				x = -hit.point.x;
 				y = -hit.point.y;
 			}
 			if (hit.point.z == -m_cube.collider.bounds.extents.z)
 			{
 				info.m_side = "neg_z/";
-				x = -hit.point.z;
+				x = -hit.point.x;
 				y = -hit.point.y;
 			}
 
 			if (hit.point.x == m_cube.collider.bounds.extents.x)
 			{
 				info.m_side = "pos_x/";
-				x = -hit.point.x;
+				x = hit.point.z;
 				y = -hit.point.y;
 			}
 			if (hit.point.x == -m_cube.collider.bounds.extents.x)
 			{
 				info.m_side = "neg_x/";
-				x = hit.point.x;
+				x = hit.point.z;
 				y = -hit.point.y;
 			}
 
@@ -336,13 +336,45 @@ public class TerrainController
 	{
 		Dictionary<TerrainTextureInfo, List<TerrainTextureInfo>> levelTerrainTextures = new Dictionary<TerrainTextureInfo, List<TerrainTextureInfo>>(new TerrainTextureInfo.Comparer());
 
-		//calc all points and call GetTerrainTexture
-		Vector3 pos = Vector3.forward;
-		pos.x = 0.49f;
-		pos.y = 0.49f;
-		TerrainTextureInfo info = GetTerrainTexture(pos, m_center, detailsLevel);
+		Vector3[] sides = new Vector3[] { Vector3.forward, Vector3.back, Vector3.left, Vector3.right, Vector3.up, Vector3.down };
+		int count = (int)Mathf.Pow(2, detailsLevel);
+		float offset = 1.0f / (float)count;
 
-		Log(info == null ? "null path" : info.m_path);
+		foreach (Vector3 side in sides)
+		{
+			Vector3 pos = side * 0.5001f;
+
+			for (int i = 0; i < count; ++i)
+			{
+				for (int j = 0; j < count; ++j)
+				{
+					if (pos.x != 0.0f)
+					{
+						pos.z = (((float)i + 0.5f) * offset) - 0.5f;
+						pos.y = (((float)j + 0.5f) * offset) - 0.5f;
+					}
+					else if (pos.y != 0.0f)
+					{
+						pos.x = (((float)i + 0.5f) * offset) - 0.5f;
+						pos.z = (((float)j + 0.5f) * offset) - 0.5f;
+					}
+					else
+					{
+						pos.x = (((float)i + 0.5f) * offset) - 0.5f;
+						pos.y = (((float)j + 0.5f) * offset) - 0.5f;
+					}
+
+					TerrainTextureInfo info = GetTerrainTexture(pos, m_center, detailsLevel);
+				}
+			}
+		}
+		//calc all points and call GetTerrainTexture
+		/*Vector3 pos = Vector3.forward * 0.5001f;
+		pos.x = 0.4f;
+		pos.y = 0.4f;*/
+		/*TerrainTextureInfo info = GetTerrainTexture(pos, m_center, detailsLevel);
+
+		Log(info == null ? "null path" : info.m_path);*/
 
 		return levelTerrainTextures;
 	}
