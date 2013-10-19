@@ -82,7 +82,7 @@ public class TerrainController
 			if (info != null && m_currentTerrainTexture != info.m_path)
 			{
 				m_currentTerrainTexture = info.m_path;
-				GetAroundTextures(info, m_detailsLevel);
+				List<TerrainTextureInfo> neghbors = GetAroundTextures(info, m_detailsLevel);
 
 				Log(m_currentTerrainTexture);
 			}
@@ -283,53 +283,6 @@ public class TerrainController
 		}
 
 		return m_terrainTextures[detailsLevel][info];
-		/*int count = (int)Mathf.Pow(2, m_detailsLevel);
-		List<string> textures = new List<string>();
-
-		float edgeSize = 1.0f;
-		float halfEdgeSize = edgeSize / 2.0f;
-		float cellSize = edgeSize / (float)count;
-
-		Vector3 point = m_center;
-		if (info.m_side == "pos_x/")
-		{
-			point.x = halfEdgeSize;
-			point.y = halfEdgeSize - cellSize * (0.5f + (float)info.m_y);
-			point.z = -halfEdgeSize + cellSize * (0.5f + (float)info.m_x);
-		}
-		else if (info.m_side == "neg_x/")
-		{
-			point.x = -halfEdgeSize;
-			point.y = halfEdgeSize - cellSize * (0.5f + (float)info.m_y);
-			point.z = halfEdgeSize - cellSize * (0.5f + (float)info.m_x);
-		}
-		else if (info.m_side == "pos_z/")
-		{
-			point.z = halfEdgeSize;
-			point.y = halfEdgeSize - cellSize * (0.5f + (float)info.m_y);
-			point.x = halfEdgeSize - cellSize * (0.5f + (float)info.m_x);
-		}
-		else if (info.m_side == "neg_z/")
-		{
-			point.z = -halfEdgeSize;
-			point.y = halfEdgeSize - cellSize * (0.5f + (float)info.m_y);
-			point.x = -halfEdgeSize + cellSize * (0.5f + (float)info.m_x);
-		}
-		else if (info.m_side == "pos_y/")
-		{
-			point.y = halfEdgeSize;
-			point.z = halfEdgeSize - cellSize * (0.5f + (float)info.m_y);
-			point.x = -halfEdgeSize + cellSize * (0.5f + (float)info.m_x);
-		}
-		else if (info.m_side == "neg_y/")
-		{
-			point.y = -halfEdgeSize;
-			point.z = -halfEdgeSize + cellSize * (0.5f + (float)info.m_y);
-			point.x = -halfEdgeSize + cellSize * (0.5f + (float)info.m_x);
-		}
-		//объект фэйково переместить в нужные стороны и вычислить текстуры
-
-		return textures.ToArray();*/
 	}
 
 	private Dictionary<TerrainTextureInfo, List<TerrainTextureInfo>> PreComputeTerrainTexturesLevel(int detailsLevel)
@@ -342,39 +295,72 @@ public class TerrainController
 
 		foreach (Vector3 side in sides)
 		{
-			Vector3 pos = side * 0.5001f;
-
 			for (int i = 0; i < count; ++i)
 			{
 				for (int j = 0; j < count; ++j)
 				{
+					Vector3 pos = side * 0.5001f;
+					List<Vector3> neighbors = new List<Vector3>();
+
 					if (pos.x != 0.0f)
 					{
 						pos.z = (((float)i + 0.5f) * offset) - 0.5f;
 						pos.y = (((float)j + 0.5f) * offset) - 0.5f;
+
+						neighbors.Add(new Vector3(pos.x, pos.y + offset, pos.z + offset));
+						neighbors.Add(new Vector3(pos.x, pos.y + offset, pos.z));
+						neighbors.Add(new Vector3(pos.x, pos.y + offset, pos.z - offset));
+						neighbors.Add(new Vector3(pos.x, pos.y, pos.z + offset));
+						neighbors.Add(new Vector3(pos.x, pos.y, pos.z - offset));
+						neighbors.Add(new Vector3(pos.x, pos.y - offset, pos.z + offset));
+						neighbors.Add(new Vector3(pos.x, pos.y - offset, pos.z));
+						neighbors.Add(new Vector3(pos.x, pos.y - offset, pos.z - offset));
 					}
 					else if (pos.y != 0.0f)
 					{
 						pos.x = (((float)i + 0.5f) * offset) - 0.5f;
 						pos.z = (((float)j + 0.5f) * offset) - 0.5f;
+
+						neighbors.Add(new Vector3(pos.x + offset, pos.y, pos.z + offset));
+						neighbors.Add(new Vector3(pos.x + offset, pos.y, pos.z));
+						neighbors.Add(new Vector3(pos.x + offset, pos.y, pos.z - offset));
+						neighbors.Add(new Vector3(pos.x, pos.y, pos.z + offset));
+						neighbors.Add(new Vector3(pos.x, pos.y, pos.z - offset));
+						neighbors.Add(new Vector3(pos.x - offset, pos.y, pos.z + offset));
+						neighbors.Add(new Vector3(pos.x - offset, pos.y, pos.z));
+						neighbors.Add(new Vector3(pos.x - offset, pos.y, pos.z - offset));
 					}
 					else
 					{
 						pos.x = (((float)i + 0.5f) * offset) - 0.5f;
 						pos.y = (((float)j + 0.5f) * offset) - 0.5f;
+
+						neighbors.Add(new Vector3(pos.x + offset, pos.y + offset, pos.z));
+						neighbors.Add(new Vector3(pos.x, pos.y + offset, pos.z));
+						neighbors.Add(new Vector3(pos.x - offset, pos.y + offset, pos.z));
+						neighbors.Add(new Vector3(pos.x + offset, pos.y, pos.z));
+						neighbors.Add(new Vector3(pos.x - offset, pos.y, pos.z));
+						neighbors.Add(new Vector3(pos.x + offset, pos.y - offset, pos.z));
+						neighbors.Add(new Vector3(pos.x, pos.y - offset, pos.z));
+						neighbors.Add(new Vector3(pos.x - offset, pos.y - offset, pos.z));
 					}
 
 					TerrainTextureInfo info = GetTerrainTexture(pos, m_center, detailsLevel);
+
+					List<TerrainTextureInfo> terrainNeighbors = new List<TerrainTextureInfo>();
+					foreach (Vector3 neighbor in neighbors)
+					{
+						TerrainTextureInfo terrainNeighbor = GetTerrainTexture(neighbor, m_center, detailsLevel);
+						if (terrainNeighbors.Find(c => c.m_path == terrainNeighbor.m_path) != null)
+						{
+							terrainNeighbors.Add(terrainNeighbor);
+						}
+					}
+
+					levelTerrainTextures.Add(info, terrainNeighbors);
 				}
 			}
 		}
-		//calc all points and call GetTerrainTexture
-		/*Vector3 pos = Vector3.forward * 0.5001f;
-		pos.x = 0.4f;
-		pos.y = 0.4f;*/
-		/*TerrainTextureInfo info = GetTerrainTexture(pos, m_center, detailsLevel);
-
-		Log(info == null ? "null path" : info.m_path);*/
 
 		return levelTerrainTextures;
 	}
