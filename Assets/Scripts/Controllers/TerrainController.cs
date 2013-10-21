@@ -84,7 +84,21 @@ public class TerrainController
 				m_currentTerrainTexture = info.m_path;
 				List<TerrainTextureInfo> neghbors = GetAroundTextures(info, m_detailsLevel);
 
-				Log(m_currentTerrainTexture);
+				string log = m_currentTerrainTexture + "\r\nNeighbors:";
+
+				if (neghbors != null)
+				{
+					foreach (TerrainTextureInfo inf in neghbors)
+					{
+						log += "\r\n" + inf.m_path;
+					}
+				}
+				else
+				{
+					log += "\r\nNull neighbors";
+				}
+
+				Log(log);
 			}
 		}
 	}
@@ -241,7 +255,7 @@ public class TerrainController
 			if (hit.point.x == -m_cube.collider.bounds.extents.x)
 			{
 				info.m_side = "neg_x/";
-				x = hit.point.z;
+				x = -hit.point.z;
 				y = -hit.point.y;
 			}
 
@@ -310,8 +324,8 @@ public class TerrainController
 						neighbors.Add(new Vector3(pos.x, pos.y + offset, pos.z + offset));
 						neighbors.Add(new Vector3(pos.x, pos.y + offset, pos.z));
 						neighbors.Add(new Vector3(pos.x, pos.y + offset, pos.z - offset));
-						neighbors.Add(new Vector3(pos.x, pos.y, pos.z + offset));
-						neighbors.Add(new Vector3(pos.x, pos.y, pos.z - offset));
+						neighbors.Add(new Vector3(pos.x, pos.y + offset, pos.z));
+						neighbors.Add(new Vector3(pos.x, pos.y - offset, pos.z));
 						neighbors.Add(new Vector3(pos.x, pos.y - offset, pos.z + offset));
 						neighbors.Add(new Vector3(pos.x, pos.y - offset, pos.z));
 						neighbors.Add(new Vector3(pos.x, pos.y - offset, pos.z - offset));
@@ -336,12 +350,12 @@ public class TerrainController
 						pos.y = (((float)j + 0.5f) * offset) - 0.5f;
 
 						neighbors.Add(new Vector3(pos.x + offset, pos.y + offset, pos.z));
-						neighbors.Add(new Vector3(pos.x, pos.y + offset, pos.z));
-						neighbors.Add(new Vector3(pos.x - offset, pos.y + offset, pos.z));
 						neighbors.Add(new Vector3(pos.x + offset, pos.y, pos.z));
-						neighbors.Add(new Vector3(pos.x - offset, pos.y, pos.z));
 						neighbors.Add(new Vector3(pos.x + offset, pos.y - offset, pos.z));
+						neighbors.Add(new Vector3(pos.x, pos.y + offset, pos.z));
 						neighbors.Add(new Vector3(pos.x, pos.y - offset, pos.z));
+						neighbors.Add(new Vector3(pos.x - offset, pos.y + offset, pos.z));
+						neighbors.Add(new Vector3(pos.x - offset, pos.y, pos.z));
 						neighbors.Add(new Vector3(pos.x - offset, pos.y - offset, pos.z));
 					}
 
@@ -351,13 +365,19 @@ public class TerrainController
 					foreach (Vector3 neighbor in neighbors)
 					{
 						TerrainTextureInfo terrainNeighbor = GetTerrainTexture(neighbor, m_center, detailsLevel);
-						if (terrainNeighbors.Find(c => c.m_path == terrainNeighbor.m_path) != null)
+						if (terrainNeighbor != null)
 						{
-							terrainNeighbors.Add(terrainNeighbor);
+							if (terrainNeighbors.Find(c => c.m_path == terrainNeighbor.m_path) == null)
+							{
+								terrainNeighbors.Add(terrainNeighbor);
+							}
 						}
 					}
 
-					levelTerrainTextures.Add(info, terrainNeighbors);
+					if (info != null)
+					{
+						levelTerrainTextures.Add(info, terrainNeighbors);
+					}
 				}
 			}
 		}
@@ -367,10 +387,11 @@ public class TerrainController
 
 	private void PreComputeTerrainTextures()
 	{
-		for (int i = m_minDetailsLevel; i < m_maxDetailsLevel; ++i)
+		/*for (int i = m_minDetailsLevel; i < m_maxDetailsLevel; ++i)
 		{
 			m_terrainTextures.Add(i, PreComputeTerrainTexturesLevel(i));
-		}
+		}*/
+		m_terrainTextures.Add(m_detailsLevel, PreComputeTerrainTexturesLevel(m_detailsLevel));
 	}
 
 	private int m_detailsLevel = 1;
