@@ -96,7 +96,6 @@ public class SingletonGameObject<T> : MonoBehaviour
 			// Init singleton
 			m_instance = component;
 			m_instance.Init();
-			m_inited = true;
 		}
 		return m_instance;
 	}
@@ -167,5 +166,4 @@ public class SingletonGameObject<T> : MonoBehaviour
 	protected static bool m_dontDestoyOnLoad = true;
 	protected static string m_prefabPath = "Prefabs/" + typeof(T).Name;
 	protected static string m_parentName = "Singleton";
-	private static bool m_inited = false;
 }

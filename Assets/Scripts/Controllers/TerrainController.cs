@@ -42,31 +42,12 @@ public class TerrainController
 		m_cube.transform.localScale = Vector3.one;
 		m_cube.transform.position = m_center;
 
+		m_curPlane = InitPlane();
+		m_curPlane.SetActive(false);
+
 		PreComputeTerrainTextures();
 
-		List<List<ushort>> data = null;
-		Quaternion rot = Quaternion.identity;
-
-		data = LoadTerrain("Assets/Textures/Earth_bump/neg_y/0_0_0.raw", 128, 128);
-		rot = Quaternion.FromToRotation(Vector3.up, Vector3.down) * Quaternion.FromToRotation(Vector3.back, Vector3.left);
-		InitTerrain(InitPlane(), data, rot);
-		data = LoadTerrain("Assets/Textures/Earth_bump/pos_y/0_0_0.raw", 128, 128);
-		rot = Quaternion.FromToRotation(Vector3.up, Vector3.up) * Quaternion.FromToRotation(Vector3.back, Vector3.left);
-		InitTerrain(InitPlane(), data, rot);
-
-		data = LoadTerrain("Assets/Textures/Earth_bump/pos_z/0_0_0.raw", 128, 128);
-		rot = Quaternion.FromToRotation(Vector3.up, Vector3.forward) * Quaternion.FromToRotation(Vector3.right, Vector3.forward);
-		InitTerrain(InitPlane(), data, rot);
-		data = LoadTerrain("Assets/Textures/Earth_bump/neg_z/0_0_0.raw", 128, 128);
-		rot = Quaternion.FromToRotation(Vector3.up, Vector3.back) * Quaternion.FromToRotation(Vector3.right, Vector3.back);
-		InitTerrain(InitPlane(), data, rot);
-
-		data = LoadTerrain("Assets/Textures/Earth_bump/neg_x/0_0_0.raw", 128, 128);
-		rot = Quaternion.FromToRotation(Vector3.up, Vector3.left) * Quaternion.FromToRotation(Vector3.right, Vector3.left);
-		InitTerrain(InitPlane(), data, rot);
-		data = LoadTerrain("Assets/Textures/Earth_bump/pos_x/0_0_0.raw", 128, 128);
-		rot = Quaternion.FromToRotation(Vector3.up, Vector3.right) * Quaternion.FromToRotation(Vector3.right, Vector3.right);
-		InitTerrain(InitPlane(), data, rot);
+		InitEarth();
 	}
 
 	public void DeInit()
@@ -103,7 +84,49 @@ public class TerrainController
 		}
 	}
 
-	private void InitTerrain(GameObject plane, List<List<ushort>> terrainData, Quaternion rot)
+	public void LoadTerrainByLatLon(Vector3 pos)
+	{
+		//1. Check need loading
+		//1yes.1. Calc loading texture
+		//1yes.2. Load 5 * 5 = 25 textures 514*514 pixels with center texture in player position
+		//1no.1. Check need recalc plane
+		//1no.1yes. recalc
+		//1no.1no. do nothing
+
+		m_curPlane.SetActive(true);
+		TerrainTextureInfo info = GetTerrainTexture(pos, m_center, m_detailsLevel);
+		List<TerrainTextureInfo> around = GetAroundTextures(info, m_detailsLevel);
+
+		m_terrainData.Clear();
+		m_terrainData.Add(info.m_path, LoadTerrainData(info.m_path, 514, 514));
+
+		foreach (TerrainTextureInfo ar in around)
+		{
+			m_terrainData.Add(ar.m_path, LoadTerrainData(ar.m_path, 514, 514));
+		}
+	}
+
+	private void InitEarth()
+	{
+		List<List<ushort>> data = null;
+
+		data = LoadTerrainData("Assets/Textures/Earth_bump/neg_y/0.raw", 128, 128);
+		m_earth.Add(InitTerrain(InitPlane(), data, GetRotation("neg_y/")));
+		data = LoadTerrainData("Assets/Textures/Earth_bump/pos_y/0.raw", 128, 128);
+		m_earth.Add(InitTerrain(InitPlane(), data, GetRotation("pos_y/")));
+
+		data = LoadTerrainData("Assets/Textures/Earth_bump/pos_z/0.raw", 128, 128);
+		m_earth.Add(InitTerrain(InitPlane(), data, GetRotation("pos_z/")));
+		data = LoadTerrainData("Assets/Textures/Earth_bump/neg_z/0.raw", 128, 128);
+		m_earth.Add(InitTerrain(InitPlane(), data, GetRotation("neg_z/")));
+
+		data = LoadTerrainData("Assets/Textures/Earth_bump/neg_x/0.raw", 128, 128);
+		m_earth.Add(InitTerrain(InitPlane(), data, GetRotation("neg_x/")));
+		data = LoadTerrainData("Assets/Textures/Earth_bump/pos_x/0.raw", 128, 128);
+		m_earth.Add(InitTerrain(InitPlane(), data, GetRotation("pos_x/")));
+	}
+
+	private GameObject InitTerrain(GameObject plane, List<List<ushort>> terrainData, Quaternion rot)
 	{
 		float min = 0;
 
@@ -140,6 +163,8 @@ public class TerrainController
 
 		plane.transform.rotation *= rot;
 		plane.transform.localScale = Vector3.one * m_radius / h;
+
+		return plane;
 	}
 
 	private GameObject InitPlane()
@@ -173,7 +198,7 @@ public class TerrainController
 		return null;
 	}
 
-	private List<List<ushort>> LoadTerrain(string fileName, int width, int height)
+	private List<List<ushort>> LoadTerrainData(string fileName, int width, int height)
 	{
 		List<List<ushort>> data = new List<List<ushort>>();
 
@@ -211,16 +236,36 @@ public class TerrainController
 		return data;
 	}
 
-	public void LoadTerrainByLatLon(Vector2 latLon)
+	private Quaternion GetRotation(string side)
 	{
-		//1. Check need loading
-		//1yes.1. Calc loading texture
-		//1yes.2. Load 5 * 5 = 25 textures 514*514 pixels with center texture in player position
-		//1no.1. Check need recalc plane
-		//1no.1yes. recalc
-		//1no.1no. do nothing
+		Quaternion rot = Quaternion.identity;
 
+		if (side == "neg_y/")
+		{
+			rot = Quaternion.FromToRotation(Vector3.up, Vector3.down) * Quaternion.FromToRotation(Vector3.back, Vector3.left);
+		}
+		else if (side == "pos_y/")
+		{
+			rot = Quaternion.FromToRotation(Vector3.up, Vector3.up) * Quaternion.FromToRotation(Vector3.back, Vector3.left);
+		}
+		else if (side == "pos_z/")
+		{
+			rot = Quaternion.FromToRotation(Vector3.up, Vector3.forward) * Quaternion.FromToRotation(Vector3.right, Vector3.forward);
+		}
+		else if (side == "neg_z/")
+		{
+			rot = Quaternion.FromToRotation(Vector3.up, Vector3.back) * Quaternion.FromToRotation(Vector3.right, Vector3.back);
+		}
+		else if (side == "pos_x/")
+		{
+			rot = Quaternion.FromToRotation(Vector3.up, Vector3.right) * Quaternion.FromToRotation(Vector3.right, Vector3.right);
+		}
+		else if (side == "neg_x/")
+		{
+			rot = Quaternion.FromToRotation(Vector3.up, Vector3.left) * Quaternion.FromToRotation(Vector3.right, Vector3.left);
+		}
 
+		return rot;
 	}
 
 	private TerrainTextureInfo GetTerrainTexture(Vector3 pos, Vector3 center, int detailsLevel)
@@ -242,7 +287,7 @@ public class TerrainController
 			if (hit.point.z == -m_cube.collider.bounds.extents.z)
 			{
 				info.m_side = "neg_z/";
-				x = -hit.point.x;
+				x = hit.point.x;
 				y = -hit.point.y;
 			}
 
@@ -322,12 +367,12 @@ public class TerrainController
 						pos.y = (((float)j + 0.5f) * offset) - 0.5f;
 
 						neighbors.Add(new Vector3(pos.x, pos.y + offset, pos.z + offset));
-						neighbors.Add(new Vector3(pos.x, pos.y + offset, pos.z));
-						neighbors.Add(new Vector3(pos.x, pos.y + offset, pos.z - offset));
-						neighbors.Add(new Vector3(pos.x, pos.y + offset, pos.z));
-						neighbors.Add(new Vector3(pos.x, pos.y - offset, pos.z));
+						neighbors.Add(new Vector3(pos.x, pos.y, pos.z + offset));
 						neighbors.Add(new Vector3(pos.x, pos.y - offset, pos.z + offset));
+						neighbors.Add(new Vector3(pos.x, pos.y + offset, pos.z));
 						neighbors.Add(new Vector3(pos.x, pos.y - offset, pos.z));
+						neighbors.Add(new Vector3(pos.x, pos.y + offset, pos.z - offset));
+						neighbors.Add(new Vector3(pos.x, pos.y, pos.z - offset));
 						neighbors.Add(new Vector3(pos.x, pos.y - offset, pos.z - offset));
 					}
 					else if (pos.y != 0.0f)
@@ -387,18 +432,19 @@ public class TerrainController
 
 	private void PreComputeTerrainTextures()
 	{
-		/*for (int i = m_minDetailsLevel; i < m_maxDetailsLevel; ++i)
+		for (int i = m_minDetailsLevel; i < m_maxDetailsLevel; ++i)
 		{
 			m_terrainTextures.Add(i, PreComputeTerrainTexturesLevel(i));
-		}*/
-		m_terrainTextures.Add(m_detailsLevel, PreComputeTerrainTexturesLevel(m_detailsLevel));
+		}
 	}
 
 	private int m_detailsLevel = 1;
 	private int m_minDetailsLevel = 0;
-	private int m_maxDetailsLevel = 7;
+	private int m_maxDetailsLevel = 6;
 	private Dictionary<string, List<List<ushort>>> m_terrainData = new Dictionary<string, List<List<ushort>>>();
 	private Dictionary<int, Dictionary<TerrainTextureInfo, List<TerrainTextureInfo>>> m_terrainTextures = new Dictionary<int, Dictionary<TerrainTextureInfo, List<TerrainTextureInfo>>>();
+	private List<GameObject> m_earth = new List<GameObject>();
+	private GameObject m_curPlane = null;
 	private GameObject m_cube = null;
 	private string m_currentTerrainTexture = string.Empty;
 	private Vector3 m_center = Vector3.zero;

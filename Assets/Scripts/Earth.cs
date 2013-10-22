@@ -37,6 +37,11 @@ public class Earth : SingletonGameObject<Earth>
 		return m_airportsLatLon[index];
 	}
 
+	public TerrainController GetTerrainController()
+	{
+		return m_terrainController;
+	}
+
 	protected override void Init()
 	{
 		base.Init();

@@ -49,7 +49,7 @@ public class MainManager : SingletonGameObject<MainManager>
 			{
 				m_player.SetAirPlane("Prefabs/cessna172");
 				m_player.GetAirPlaneController().SetLatLon(Earth.Instance().GetAirportLatLon(24));
-				//Earth.Instance().LoadTerrainByLatLon(Earth.Instance().GetAirportLatLon(24));
+				Earth.Instance().GetTerrainController().LoadTerrainByLatLon(m_player.GetAirPlane().transform.position);
 				m_started = true;
 			}
 		}
