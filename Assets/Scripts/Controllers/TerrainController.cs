@@ -99,46 +99,43 @@ public class TerrainController
 		//1no.1yes. recalc
 		//1no.1no. do nothing
 
+		//calc m_detailsLevel
+
 		m_curPlane.SetActive(true);
 		TerrainTextureInfo info = GetTerrainTexture(pos, m_center, m_detailsLevel);
 		if (m_currentTerrainTexture != info.m_path)
 		{
-			Dictionary<string, TerrainTextureInfo> around = GetAroundTextures(info, m_detailsLevel);
-
 			m_terrainData.Clear();
-			m_terrainData.Add(info.m_path, LoadTerrainData(info.m_path, m_terrainTextureSize, m_terrainTextureSize));
-			foreach (KeyValuePair<string, TerrainTextureInfo> ar in around)
-			{
-				m_terrainData.Add(ar.Value.m_path, LoadTerrainData(ar.Value.m_path, m_terrainTextureSize, m_terrainTextureSize));
-			}
-		}
 
-		//calc current height map
-		int hitX = (int)(info.m_hitPos.x * (float)m_terrainTextureSize);
-		int hitY = (int)(info.m_hitPos.y * (float)m_terrainTextureSize);
-
-		if (hitX < m_planeSize / 2)
-		{
-			if (hitY < m_planeSize / 2)
+			//TODO: fill data 3*514 x 3*514
+			Dictionary<string, TerrainTextureInfo> around = GetAroundTextures(info, m_detailsLevel);
+			if (around.ContainsKey("LeftUp"))
 			{
-				//LeftUp
+				List<List<ushort>> data = LoadTerrainData(around["LeftUp"].m_path, m_terrainTextureSize, m_terrainTextureSize);
+				foreach (List<ushort> row in data)
+				{
+					List<ushort> row2 = new List<ushort>();
+					row2.AddRange(row);
+					m_terrainData.Add(row2);
+				}
 			}
 			else
 			{
-				//Left
+				for (int i = 0; i < m_terrainTextureSize; ++i)
+				{
+					List<ushort> row = new List<ushort>();
+
+					for (int j = 0; j < m_terrainTextureSize; ++j)
+					{
+						row.Add(0);
+					}
+					m_terrainData.Add(row);
+				}
 			}
 		}
-		else if (hitX + m_planeSize / 2 >= m_terrainTextureSize)
-		{
-			if (hitY + m_planeSize / 2 >= m_terrainTextureSize)
-			{
-				//RightUp
-			}
-			else
-			{
-				//Right
-			}
-		}
+
+		//recalc m_curPlane size in accordance with m_detailsLevel
+		//m_earth.Add(InitTerrain(m_curPlane, data, GetRotation("neg_y/")));
 	}
 
 	private void InitEarth()
@@ -495,7 +492,7 @@ public class TerrainController
 	private int m_detailsLevel = 1;
 	private int m_minDetailsLevel = 0;
 	private int m_maxDetailsLevel = 6;
-	private Dictionary<string, List<List<ushort>>> m_terrainData = new Dictionary<string, List<List<ushort>>>();
+	private List<List<ushort>> m_terrainData = new List<List<ushort>>();
 	private Dictionary<int, Dictionary<TerrainTextureInfo, Dictionary<string, TerrainTextureInfo>>> m_terrainTextures = new Dictionary<int, Dictionary<TerrainTextureInfo, Dictionary<string, TerrainTextureInfo>>>();
 	private List<GameObject> m_earth = new List<GameObject>();
 	private GameObject m_curPlane = null;
