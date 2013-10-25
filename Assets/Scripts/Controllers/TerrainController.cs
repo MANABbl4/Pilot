@@ -36,6 +36,7 @@ public class TerrainController
 
 	public void Init(Vector3 center, float radius)
 	{
+		m_terrainData = new ushort[3 * m_terrainTextureSize, 3 * m_terrainTextureSize];
 		m_center = center;
 		m_radius = radius;
 
@@ -47,6 +48,7 @@ public class TerrainController
 		m_curPlane.SetActive(false);
 
 		PreComputeTerrainTextures();
+		PreComputeRotations();
 
 		InitEarth();
 	}
@@ -105,31 +107,148 @@ public class TerrainController
 		TerrainTextureInfo info = GetTerrainTexture(pos, m_center, m_detailsLevel);
 		if (m_currentTerrainTexture != info.m_path)
 		{
-			m_terrainData.Clear();
-
-			//TODO: fill data 3*514 x 3*514
-			Dictionary<string, TerrainTextureInfo> around = GetAroundTextures(info, m_detailsLevel);
-			if (around.ContainsKey("LeftUp"))
+			// TODO: fill data 3*514 x 3*514
+			// CenterCenter
+			int offsetX = m_terrainTextureSize;
+			int offsetY = m_terrainTextureSize;
+			ushort[,] data = LoadTerrainData(info.m_path, m_terrainTextureSize, m_terrainTextureSize);
+			for (int i = 0; i < data.GetLength(0); ++i)
 			{
-				List<List<ushort>> data = LoadTerrainData(around["LeftUp"].m_path, m_terrainTextureSize, m_terrainTextureSize);
-				foreach (List<ushort> row in data)
+				for (int j = 0; j < data.GetLength(1); ++j)
 				{
-					List<ushort> row2 = new List<ushort>();
-					row2.AddRange(row);
-					m_terrainData.Add(row2);
+					m_terrainData[i + offsetY, j + offsetX] = data[i, j];
+				}
+			}
+
+			Dictionary<string, TerrainTextureInfo> around = GetAroundTextures(info, m_detailsLevel);
+
+			// CenterUp
+			offsetX = m_terrainTextureSize;
+			offsetY = 0;
+			if (around.ContainsKey("CenterUp"))
+			{
+				data = LoadTerrainData(around["CenterUp"].m_path, m_terrainTextureSize, m_terrainTextureSize);
+				data.Rotate(m_rotations[info.m_side][around["CenterUp"].m_side]);
+				for (int i = 0; i < data.GetLength(0); ++i)
+				{
+					for (int j = 0; j < data.GetLength(1); ++j)
+					{
+						m_terrainData[i + offsetY, j + offsetX] = data[i, j];
+					}
 				}
 			}
 			else
 			{
 				for (int i = 0; i < m_terrainTextureSize; ++i)
 				{
-					List<ushort> row = new List<ushort>();
-
 					for (int j = 0; j < m_terrainTextureSize; ++j)
 					{
-						row.Add(0);
+						m_terrainData[i, j] = 0;
 					}
-					m_terrainData.Add(row);
+				}
+			}
+
+			// CenterDown
+			offsetX = m_terrainTextureSize;
+			offsetY = m_terrainTextureSize + m_terrainTextureSize;
+			if (around.ContainsKey("CenterDown"))
+			{
+				data = LoadTerrainData(around["CenterDown"].m_path, m_terrainTextureSize, m_terrainTextureSize);
+				data.Rotate(m_rotations[info.m_side][around["CenterDown"].m_side]);
+				for (int i = 0; i < data.GetLength(0); ++i)
+				{
+					for (int j = 0; j < data.GetLength(1); ++j)
+					{
+						m_terrainData[i + offsetY, j + offsetX] = data[i, j];
+					}
+				}
+			}
+			else
+			{
+				for (int i = 0; i < m_terrainTextureSize; ++i)
+				{
+					for (int j = 0; j < m_terrainTextureSize; ++j)
+					{
+						m_terrainData[i, j] = 0;
+					}
+				}
+			}
+
+			// LeftCenter
+			offsetX = 0;
+			offsetY = m_terrainTextureSize;
+			if (around.ContainsKey("LeftCenter"))
+			{
+				data = LoadTerrainData(around["LeftCenter"].m_path, m_terrainTextureSize, m_terrainTextureSize);
+				data.Rotate(m_rotations[info.m_side][around["LeftCenter"].m_side]);
+				for (int i = 0; i < data.GetLength(0); ++i)
+				{
+					for (int j = 0; j < data.GetLength(1); ++j)
+					{
+						m_terrainData[i + offsetY, j + offsetX] = data[i, j];
+					}
+				}
+			}
+			else
+			{
+				for (int i = 0; i < m_terrainTextureSize; ++i)
+				{
+					for (int j = 0; j < m_terrainTextureSize; ++j)
+					{
+						m_terrainData[i, j] = 0;
+					}
+				}
+			}
+
+			// RightCenter
+			offsetX = m_terrainTextureSize + m_terrainTextureSize;
+			offsetY = m_terrainTextureSize;
+			if (around.ContainsKey("RightCenter"))
+			{
+				data = LoadTerrainData(around["RightCenter"].m_path, m_terrainTextureSize, m_terrainTextureSize);
+				data.Rotate(m_rotations[info.m_side][around["RightCenter"].m_side]);
+				for (int i = 0; i < data.GetLength(0); ++i)
+				{
+					for (int j = 0; j < data.GetLength(1); ++j)
+					{
+						m_terrainData[i + offsetY, j + offsetX] = data[i, j];
+					}
+				}
+			}
+			else
+			{
+				for (int i = 0; i < m_terrainTextureSize; ++i)
+				{
+					for (int j = 0; j < m_terrainTextureSize; ++j)
+					{
+						m_terrainData[i, j] = 0;
+					}
+				}
+			}
+
+			// LeftUp
+			offsetX = 0;
+			offsetY = 0;
+			if (around.ContainsKey("LeftUp"))
+			{
+				data = LoadTerrainData(around["LeftUp"].m_path, m_terrainTextureSize, m_terrainTextureSize);
+				data.Rotate(m_rotations[info.m_side][around["LeftUp"].m_side]);
+				for (int i = 0; i < data.GetLength(0); ++i)
+				{
+					for (int j = 0; j < data.GetLength(1); ++j)
+					{
+						m_terrainData[i + offsetY, j + offsetX] = data[i, j];
+					}
+				}
+			}
+			else
+			{
+				for (int i = 0; i < m_terrainTextureSize; ++i)
+				{
+					for (int j = 0; j < m_terrainTextureSize; ++j)
+					{
+						m_terrainData[i, j] = 0;
+					}
 				}
 			}
 		}
@@ -138,9 +257,35 @@ public class TerrainController
 		//m_earth.Add(InitTerrain(m_curPlane, data, GetRotation("neg_y/")));
 	}
 
+	private void FillTerrainData(ushort[,] terrainData, int terrainTextureSize, TerrainTextureInfo info, Utils.RotateType rotation, int offsetX, int offsetY)
+	{
+		if (info != null)
+		{
+			ushort[,] data = LoadTerrainData(info.m_path, terrainTextureSize, terrainTextureSize);
+			data.Rotate(rotation);
+			for (int i = 0; i < data.GetLength(0); ++i)
+			{
+				for (int j = 0; j < data.GetLength(1); ++j)
+				{
+					terrainData[i + offsetY, j + offsetX] = data[i, j];
+				}
+			}
+		}
+		else
+		{
+			for (int i = 0; i < terrainTextureSize; ++i)
+			{
+				for (int j = 0; j < terrainTextureSize; ++j)
+				{
+					terrainData[i + offsetY, j + offsetX] = 0;
+				}
+			}
+		}
+	}
+
 	private void InitEarth()
 	{
-		List<List<ushort>> data = null;
+		ushort[,] data = null;
 
 		data = LoadTerrainData("Assets/Textures/Earth_bump/neg_y/0.raw", m_planeSize, m_planeSize);
 		m_earth.Add(InitTerrain(InitPlane(), data, GetRotation("neg_y/")));
@@ -158,7 +303,7 @@ public class TerrainController
 		m_earth.Add(InitTerrain(InitPlane(), data, GetRotation("pos_x/")));
 	}
 
-	private GameObject InitTerrain(GameObject plane, List<List<ushort>> terrainData, Quaternion rot)
+	private GameObject InitTerrain(GameObject plane, ushort[,] terrainData, Quaternion rot)
 	{
 		float min = 0;
 
@@ -179,7 +324,7 @@ public class TerrainController
 
 				vertices[k].y += h;
 				Vector3 d = (vertices[k] - c).normalized;
-				vertices[k] = d * (h + (terrainData[i][j] - min) / 10000);
+				vertices[k] = d * (h + (terrainData[i,j] - min) / 10000);
 
 				/*if ((i == 0 && (j == 0 || j == 127 || j == 15 || j == 31 || j == 47 || j == 63 || j == 79 || j == 95 || j == 111)))
 				{
@@ -230,9 +375,10 @@ public class TerrainController
 		return null;
 	}
 
-	private List<List<ushort>> LoadTerrainData(string fileName, int width, int height)
+	private ushort[,] LoadTerrainData(string fileName, int width, int height)
 	{
-		List<List<ushort>> data = new List<List<ushort>>();
+		ushort[,] data = new ushort[height, width];
+		//List<List<ushort>> data1 = new List<List<ushort>>();
 
 		ushort max = ushort.MinValue;
 		ushort min = ushort.MaxValue;
@@ -241,7 +387,7 @@ public class TerrainController
 		{
 			for (int i = 0; i < height; ++i)
 			{
-				List<ushort> row = new List<ushort>();
+				//List<ushort> row = new List<ushort>();
 
 				for (int j = 0; j < width; ++j)
 				{
@@ -256,10 +402,11 @@ public class TerrainController
 						min = d;
 					}
 
-					row.Add(d);
+					data[i, j] = d;
+					//row.Add(d);
 				}
 
-				data.Add(row);
+				//data1.Add(row);
 			}
 		}
 
@@ -489,12 +636,60 @@ public class TerrainController
 		}
 	}
 
+	private void PreComputeRotations()
+	{
+		Dictionary<string, Utils.RotateType> rotations = new Dictionary<string, Utils.RotateType>();
+
+		rotations.Clear();
+		rotations.Add("pos_y/", Utils.RotateType.Rotate270);
+		rotations.Add("pos_z/", Utils.RotateType.Rotate0);
+		rotations.Add("neg_z/", Utils.RotateType.Rotate0);
+		rotations.Add("neg_y/", Utils.RotateType.Rotate90);
+		m_rotations.Add("neg_x/", rotations);
+
+		rotations.Clear();
+		rotations.Add("pos_y/", Utils.RotateType.Rotate90);
+		rotations.Add("pos_z/", Utils.RotateType.Rotate0);
+		rotations.Add("neg_z/", Utils.RotateType.Rotate0);
+		rotations.Add("neg_y/", Utils.RotateType.Rotate270);
+		m_rotations.Add("pos_x/", rotations);
+
+		rotations.Clear();
+		rotations.Add("pos_y/", Utils.RotateType.Rotate0);
+		rotations.Add("pos_x/", Utils.RotateType.Rotate0);
+		rotations.Add("neg_x/", Utils.RotateType.Rotate0);
+		rotations.Add("neg_y/", Utils.RotateType.Rotate0);
+		m_rotations.Add("neg_z/", rotations);
+
+		rotations.Clear();
+		rotations.Add("pos_y/", Utils.RotateType.Rotate180);
+		rotations.Add("pos_x/", Utils.RotateType.Rotate0);
+		rotations.Add("neg_x/", Utils.RotateType.Rotate0);
+		rotations.Add("neg_y/", Utils.RotateType.Rotate180);
+		m_rotations.Add("pos_z/", rotations);
+
+		rotations.Clear();
+		rotations.Add("pos_z/", Utils.RotateType.Rotate180);
+		rotations.Add("pos_x/", Utils.RotateType.Rotate90);
+		rotations.Add("neg_x/", Utils.RotateType.Rotate270);
+		rotations.Add("neg_z/", Utils.RotateType.Rotate0);
+		m_rotations.Add("neg_y/", rotations);
+
+		rotations.Clear();
+		rotations.Add("pos_z/", Utils.RotateType.Rotate180);
+		rotations.Add("pos_x/", Utils.RotateType.Rotate90);
+		rotations.Add("neg_x/", Utils.RotateType.Rotate270);
+		rotations.Add("neg_z/", Utils.RotateType.Rotate0);
+		m_rotations.Add("pos_y/", rotations);
+	}
+
 	private int m_detailsLevel = 1;
 	private int m_minDetailsLevel = 0;
-	private int m_maxDetailsLevel = 6;
-	private List<List<ushort>> m_terrainData = new List<List<ushort>>();
+	private int m_maxDetailsLevel = 3;
+	private ushort[,] m_terrainData = null;
 	private Dictionary<int, Dictionary<TerrainTextureInfo, Dictionary<string, TerrainTextureInfo>>> m_terrainTextures = new Dictionary<int, Dictionary<TerrainTextureInfo, Dictionary<string, TerrainTextureInfo>>>();
 	private List<GameObject> m_earth = new List<GameObject>();
+	private Dictionary<string, Dictionary<string, Utils.RotateType>> m_rotations = new Dictionary<string, Dictionary<string, Utils.RotateType>>();
 	private GameObject m_curPlane = null;
 	private GameObject m_cube = null;
 	private string m_currentTerrainTexture = string.Empty;
