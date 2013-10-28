@@ -3,6 +3,12 @@ using System.Collections;
 
 public class CameraManager : SingletonGameObject<CameraManager>
 {
+	public void Tick()
+	{
+		UpdateZoom();
+		UpdateCameraPos();
+	}
+
 	protected override void Init()
 	{
 		base.Init();
@@ -15,13 +21,6 @@ public class CameraManager : SingletonGameObject<CameraManager>
 	protected override void DeInit()
 	{
 		base.DeInit();
-	}
-	
-	// Update is called once per frame
-	private void Update()
-	{
-		UpdateZoom();
-		UpdateCameraPos();
 	}
 
 	private void UpdateCameraPos()

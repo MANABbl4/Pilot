@@ -42,6 +42,14 @@ public class Earth : SingletonGameObject<Earth>
 		return m_terrainController;
 	}
 
+	public void Tick()
+	{
+		if (m_terrainController != null)
+		{
+			m_terrainController.Tick();
+		}
+	}
+
 	protected override void Init()
 	{
 		base.Init();
@@ -59,7 +67,7 @@ public class Earth : SingletonGameObject<Earth>
 	{
 		base.DeInit();
 
-        m_terrainController.DeInit();
+		m_terrainController.DeInit();
 	}
 
 	private void CreateAirport(Vector2 pos)
@@ -79,14 +87,6 @@ public class Earth : SingletonGameObject<Earth>
 		}
 	}
 
-	private void Update()
-	{
-        if (m_terrainController != null)
-        {
-            m_terrainController.Tick();
-        }
-	}
-
 	[SerializeField]
 	private float m_radius = 6370000.0f;
 	[SerializeField]
@@ -95,5 +95,5 @@ public class Earth : SingletonGameObject<Earth>
 	private float m_g = 10.0f;
 
 	private List<GameObject> m_airports = new List<GameObject>();
-    private TerrainController m_terrainController = new TerrainController();
+	private TerrainController m_terrainController = new TerrainController();
 }

@@ -26,6 +26,11 @@ public class TerrainController
 				return x.m_path.GetHashCode() ^ x.m_path.GetHashCode();
 			}
 		}
+
+		public override string ToString()
+		{
+			return "m_side = " + m_side + "; m_hitPos = " + m_hitPos + "; m_path = " + m_path;
+		}
 	}
 
 	[System.Diagnostics.Conditional("DEBUG_TERRAIN_CONTROLLER")]
@@ -46,6 +51,12 @@ public class TerrainController
 
 		m_curPlane = InitPlane();
 		m_curPlane.SetActive(false);
+		MeshFilter mf = m_curPlane.GetComponent<MeshFilter>();
+		if (mf != null)
+		{
+			Mesh m = mf.mesh;
+			m_curPlaneInitialVertices = m.vertices;
+		}
 
 		PreComputeTerrainTextures();
 		PreComputeRotations();
@@ -102,159 +113,110 @@ public class TerrainController
 		//1no.1no. do nothing
 
 		//calc m_detailsLevel
+		SetVisibleEarth(false);
 
 		m_curPlane.SetActive(true);
+		int offsetX = m_terrainTextureSize;
+		int offsetY = m_terrainTextureSize;
+
 		TerrainTextureInfo info = GetTerrainTexture(pos, m_center, m_detailsLevel);
 		if (m_currentTerrainTexture != info.m_path)
 		{
-			// TODO: fill data 3*514 x 3*514
 			// CenterCenter
-			int offsetX = m_terrainTextureSize;
-			int offsetY = m_terrainTextureSize;
-			ushort[,] data = LoadTerrainData(info.m_path, m_terrainTextureSize, m_terrainTextureSize);
-			for (int i = 0; i < data.GetLength(0); ++i)
-			{
-				for (int j = 0; j < data.GetLength(1); ++j)
-				{
-					m_terrainData[i + offsetY, j + offsetX] = data[i, j];
-				}
-			}
+			offsetX = m_terrainTextureSize;
+			offsetY = m_terrainTextureSize;
+			FillTerrainData(m_terrainData, m_terrainTextureSize, info,
+					Utils.RotateType.Rotate0, offsetX, offsetY);
 
 			Dictionary<string, TerrainTextureInfo> around = GetAroundTextures(info, m_detailsLevel);
 
 			// CenterUp
 			offsetX = m_terrainTextureSize;
 			offsetY = 0;
-			if (around.ContainsKey("CenterUp"))
-			{
-				data = LoadTerrainData(around["CenterUp"].m_path, m_terrainTextureSize, m_terrainTextureSize);
-				data.Rotate(m_rotations[info.m_side][around["CenterUp"].m_side]);
-				for (int i = 0; i < data.GetLength(0); ++i)
-				{
-					for (int j = 0; j < data.GetLength(1); ++j)
-					{
-						m_terrainData[i + offsetY, j + offsetX] = data[i, j];
-					}
-				}
-			}
-			else
-			{
-				for (int i = 0; i < m_terrainTextureSize; ++i)
-				{
-					for (int j = 0; j < m_terrainTextureSize; ++j)
-					{
-						m_terrainData[i, j] = 0;
-					}
-				}
-			}
+			FillTerrainData(m_terrainData, m_terrainTextureSize, around["CenterUp"],
+				m_rotations[info.m_side][around["CenterUp"].m_side], offsetX, offsetY);
 
 			// CenterDown
 			offsetX = m_terrainTextureSize;
 			offsetY = m_terrainTextureSize + m_terrainTextureSize;
-			if (around.ContainsKey("CenterDown"))
-			{
-				data = LoadTerrainData(around["CenterDown"].m_path, m_terrainTextureSize, m_terrainTextureSize);
-				data.Rotate(m_rotations[info.m_side][around["CenterDown"].m_side]);
-				for (int i = 0; i < data.GetLength(0); ++i)
-				{
-					for (int j = 0; j < data.GetLength(1); ++j)
-					{
-						m_terrainData[i + offsetY, j + offsetX] = data[i, j];
-					}
-				}
-			}
-			else
-			{
-				for (int i = 0; i < m_terrainTextureSize; ++i)
-				{
-					for (int j = 0; j < m_terrainTextureSize; ++j)
-					{
-						m_terrainData[i, j] = 0;
-					}
-				}
-			}
+			FillTerrainData(m_terrainData, m_terrainTextureSize, around["CenterDown"],
+				m_rotations[info.m_side][around["CenterDown"].m_side], offsetX, offsetY);
 
 			// LeftCenter
 			offsetX = 0;
 			offsetY = m_terrainTextureSize;
-			if (around.ContainsKey("LeftCenter"))
-			{
-				data = LoadTerrainData(around["LeftCenter"].m_path, m_terrainTextureSize, m_terrainTextureSize);
-				data.Rotate(m_rotations[info.m_side][around["LeftCenter"].m_side]);
-				for (int i = 0; i < data.GetLength(0); ++i)
-				{
-					for (int j = 0; j < data.GetLength(1); ++j)
-					{
-						m_terrainData[i + offsetY, j + offsetX] = data[i, j];
-					}
-				}
-			}
-			else
-			{
-				for (int i = 0; i < m_terrainTextureSize; ++i)
-				{
-					for (int j = 0; j < m_terrainTextureSize; ++j)
-					{
-						m_terrainData[i, j] = 0;
-					}
-				}
-			}
+			FillTerrainData(m_terrainData, m_terrainTextureSize, around["LeftCenter"],
+				m_rotations[info.m_side][around["LeftCenter"].m_side], offsetX, offsetY);
 
 			// RightCenter
 			offsetX = m_terrainTextureSize + m_terrainTextureSize;
 			offsetY = m_terrainTextureSize;
-			if (around.ContainsKey("RightCenter"))
-			{
-				data = LoadTerrainData(around["RightCenter"].m_path, m_terrainTextureSize, m_terrainTextureSize);
-				data.Rotate(m_rotations[info.m_side][around["RightCenter"].m_side]);
-				for (int i = 0; i < data.GetLength(0); ++i)
-				{
-					for (int j = 0; j < data.GetLength(1); ++j)
-					{
-						m_terrainData[i + offsetY, j + offsetX] = data[i, j];
-					}
-				}
-			}
-			else
-			{
-				for (int i = 0; i < m_terrainTextureSize; ++i)
-				{
-					for (int j = 0; j < m_terrainTextureSize; ++j)
-					{
-						m_terrainData[i, j] = 0;
-					}
-				}
-			}
+			FillTerrainData(m_terrainData, m_terrainTextureSize, around["RightCenter"],
+				m_rotations[info.m_side][around["RightCenter"].m_side], offsetX, offsetY);
 
 			// LeftUp
 			offsetX = 0;
 			offsetY = 0;
 			if (around.ContainsKey("LeftUp"))
 			{
-				data = LoadTerrainData(around["LeftUp"].m_path, m_terrainTextureSize, m_terrainTextureSize);
-				data.Rotate(m_rotations[info.m_side][around["LeftUp"].m_side]);
-				for (int i = 0; i < data.GetLength(0); ++i)
-				{
-					for (int j = 0; j < data.GetLength(1); ++j)
-					{
-						m_terrainData[i + offsetY, j + offsetX] = data[i, j];
-					}
-				}
+				FillTerrainData(m_terrainData, m_terrainTextureSize, around["LeftUp"],
+					m_rotations[info.m_side][around["LeftUp"].m_side], offsetX, offsetY);
 			}
 			else
 			{
-				for (int i = 0; i < m_terrainTextureSize; ++i)
-				{
-					for (int j = 0; j < m_terrainTextureSize; ++j)
-					{
-						m_terrainData[i, j] = 0;
-					}
-				}
+				FillTerrainData(m_terrainData, m_terrainTextureSize, null,
+					m_rotations[info.m_side][GetAroundTextures(around["LeftCenter"], m_detailsLevel)["CenterUp"].m_side], offsetX, offsetY);
 			}
+
+			// RightUp
+			offsetX = m_terrainTextureSize + m_terrainTextureSize;
+			offsetY = 0;
+			if (around.ContainsKey("RightUp"))
+			{
+				FillTerrainData(m_terrainData, m_terrainTextureSize, around["RightUp"],
+					m_rotations[info.m_side][around["RightUp"].m_side], offsetX, offsetY);
+			}
+			else
+			{
+				FillTerrainData(m_terrainData, m_terrainTextureSize, null,
+					m_rotations[info.m_side][GetAroundTextures(around["RightCenter"], m_detailsLevel)["CenterUp"].m_side], offsetX, offsetY);
+			}
+
+			// LeftDown
+			offsetX = 0;
+			offsetY = m_terrainTextureSize + m_terrainTextureSize;
+			if (around.ContainsKey("LeftDown"))
+			{
+				FillTerrainData(m_terrainData, m_terrainTextureSize, around["LeftDown"],
+					m_rotations[info.m_side][around["LeftDown"].m_side], offsetX, offsetY);
+			}
+			else
+			{
+				FillTerrainData(m_terrainData, m_terrainTextureSize, null,
+					m_rotations[info.m_side][GetAroundTextures(around["LeftCenter"], m_detailsLevel)["CenterDown"].m_side], offsetX, offsetY);
+			}
+
+			// RightDown
+			offsetX = m_terrainTextureSize + m_terrainTextureSize;
+			offsetY = m_terrainTextureSize + m_terrainTextureSize;
+			if (around.ContainsKey("RightDown"))
+			{
+				FillTerrainData(m_terrainData, m_terrainTextureSize, around["RightDown"],
+					m_rotations[info.m_side][around["RightDown"].m_side], offsetX, offsetY);
+			}
+			else
+			{
+				FillTerrainData(m_terrainData, m_terrainTextureSize, null,
+					m_rotations[info.m_side][GetAroundTextures(around["RightCenter"], m_detailsLevel)["CenterDown"].m_side], offsetX, offsetY);
+			}
+
+			m_currentTerrainTexture = info.m_path;
 		}
 
-		//recalc m_curPlane size in accordance with m_detailsLevel
-		//m_earth.Add(InitTerrain(m_curPlane, data, GetRotation("neg_y/")));
+		offsetX = (int)(m_terrainTextureSize * (1.0f + info.m_hitPos.x)) - (m_planeSize / 2 - 1);
+		offsetY = (int)(m_terrainTextureSize * (1.0f + info.m_hitPos.y)) - (m_planeSize / 2 - 1);
+		ResetPlane(m_curPlane, m_detailsLevel);
+		m_curPlane = InitTerrain(m_curPlane, m_terrainData, GetRotation(info.m_side), offsetX, offsetY);
 	}
 
 	private void FillTerrainData(ushort[,] terrainData, int terrainTextureSize, TerrainTextureInfo info, Utils.RotateType rotation, int offsetX, int offsetY)
@@ -283,27 +245,51 @@ public class TerrainController
 		}
 	}
 
+	private void ResetPlane(GameObject plane)
+	{
+		MeshFilter mf = plane.GetComponent<MeshFilter>();
+		if (mf != null)
+		{
+			Mesh m = mf.mesh;
+			m.vertices = m_curPlaneInitialVertices;
+			mf.sharedMesh = m;
+			mf.sharedMesh.RecalculateNormals();
+			mf.sharedMesh.RecalculateBounds();
+		}
+
+		plane.transform.rotation = Quaternion.identity;
+		plane.transform.localScale = Vector3.one;
+	}
+
 	private void InitEarth()
 	{
 		ushort[,] data = null;
 
 		data = LoadTerrainData("Assets/Textures/Earth_bump/neg_y/0.raw", m_planeSize, m_planeSize);
-		m_earth.Add(InitTerrain(InitPlane(), data, GetRotation("neg_y/")));
+		m_earth.Add(InitTerrain(InitPlane(), data, GetRotation("neg_y/"), 0, 0));
 		data = LoadTerrainData("Assets/Textures/Earth_bump/pos_y/0.raw", m_planeSize, m_planeSize);
-		m_earth.Add(InitTerrain(InitPlane(), data, GetRotation("pos_y/")));
+		m_earth.Add(InitTerrain(InitPlane(), data, GetRotation("pos_y/"), 0, 0));
 
 		data = LoadTerrainData("Assets/Textures/Earth_bump/pos_z/0.raw", m_planeSize, m_planeSize);
-		m_earth.Add(InitTerrain(InitPlane(), data, GetRotation("pos_z/")));
+		m_earth.Add(InitTerrain(InitPlane(), data, GetRotation("pos_z/"), 0, 0));
 		data = LoadTerrainData("Assets/Textures/Earth_bump/neg_z/0.raw", m_planeSize, m_planeSize);
-		m_earth.Add(InitTerrain(InitPlane(), data, GetRotation("neg_z/")));
+		m_earth.Add(InitTerrain(InitPlane(), data, GetRotation("neg_z/"), 0, 0));
 
 		data = LoadTerrainData("Assets/Textures/Earth_bump/neg_x/0.raw", m_planeSize, m_planeSize);
-		m_earth.Add(InitTerrain(InitPlane(), data, GetRotation("neg_x/")));
+		m_earth.Add(InitTerrain(InitPlane(), data, GetRotation("neg_x/"), 0, 0));
 		data = LoadTerrainData("Assets/Textures/Earth_bump/pos_x/0.raw", m_planeSize, m_planeSize);
-		m_earth.Add(InitTerrain(InitPlane(), data, GetRotation("pos_x/")));
+		m_earth.Add(InitTerrain(InitPlane(), data, GetRotation("pos_x/"), 0, 0));
 	}
 
-	private GameObject InitTerrain(GameObject plane, ushort[,] terrainData, Quaternion rot)
+	private void SetVisibleEarth(bool val)
+	{
+		foreach (GameObject plane in m_earth)
+		{
+			plane.SetActive(val);
+		}
+	}
+
+	private GameObject InitTerrain(GameObject plane, ushort[,] terrainData, Quaternion rot, int fromX, int fromY)
 	{
 		float min = 0;
 
@@ -324,12 +310,7 @@ public class TerrainController
 
 				vertices[k].y += h;
 				Vector3 d = (vertices[k] - c).normalized;
-				vertices[k] = d * (h + (terrainData[i,j] - min) / 10000);
-
-				/*if ((i == 0 && (j == 0 || j == 127 || j == 15 || j == 31 || j == 47 || j == 63 || j == 79 || j == 95 || j == 111)))
-				{
-					Log("pos[" + i + "][" + j + "] = " + vertices[k] + " latlon(up) = " + vertices[k].GetLatLon(m_center, Vector3.forward));
-				}*/
+				vertices[k] = d * (h + (float)(terrainData[i + fromX, j + fromY] - min) / 10000.0f);
 			}
 
 			m.vertices = vertices;
@@ -510,7 +491,7 @@ public class TerrainController
 			info.m_y = (int)(count * (hitPos.y + 0.5f));
 			info.m_hitPos.x = hitPos.x + 0.5f - (((float)info.m_x) / count);
 			info.m_hitPos.y = hitPos.y + 0.5f - (((float)info.m_y) / count);
-			info.m_path = info.m_side + detailsLevel + "_" + info.m_x + "_" + info.m_y + ".raw";
+			info.m_path = "Assets/Textures/Earth_bump/" + info.m_side + detailsLevel + "_" + info.m_x + "_" + info.m_y + ".raw";
 
 			return info;
 		}
@@ -556,7 +537,7 @@ public class TerrainController
 						pos.y = (((float)j + 0.5f) * offset) - 0.5f;
 
 						neighbors.Add("RightUp", new Vector3(pos.x, pos.y + offset, pos.z + Mathf.Sign(pos.x) * offset));
-						neighbors.Add("Right", new Vector3(pos.x, pos.y, pos.z + Mathf.Sign(pos.x) * offset));
+						neighbors.Add("RightCenter", new Vector3(pos.x, pos.y, pos.z + Mathf.Sign(pos.x) * offset));
 						neighbors.Add("RightDown", new Vector3(pos.x, pos.y - offset, pos.z + Mathf.Sign(pos.x) * offset));
 						neighbors.Add("CenterUp", new Vector3(pos.x, pos.y + offset, pos.z));
 						neighbors.Add("CenterDown", new Vector3(pos.x, pos.y - offset, pos.z));
@@ -570,7 +551,7 @@ public class TerrainController
 						pos.z = (((float)j + 0.5f) * offset) - 0.5f;
 
 						neighbors.Add("RightUp", new Vector3(pos.x + Mathf.Sign(pos.y) * offset, pos.y, pos.z + offset));
-						neighbors.Add("Right", new Vector3(pos.x + Mathf.Sign(pos.y) * offset, pos.y, pos.z));
+						neighbors.Add("RightCenter", new Vector3(pos.x + Mathf.Sign(pos.y) * offset, pos.y, pos.z));
 						neighbors.Add("RightDown", new Vector3(pos.x + Mathf.Sign(pos.y) * offset, pos.y, pos.z - offset));
 						neighbors.Add("CenterUp", new Vector3(pos.x, pos.y, pos.z + offset));
 						neighbors.Add("CenterDown", new Vector3(pos.x, pos.y, pos.z - offset));
@@ -584,7 +565,7 @@ public class TerrainController
 						pos.y = (((float)j + 0.5f) * offset) - 0.5f;
 
 						neighbors.Add("RightUp", new Vector3(pos.x + Mathf.Sign(pos.z) * offset, pos.y + offset, pos.z));
-						neighbors.Add("Right", new Vector3(pos.x + Mathf.Sign(pos.z) * offset, pos.y, pos.z));
+						neighbors.Add("RightCenter", new Vector3(pos.x + Mathf.Sign(pos.z) * offset, pos.y, pos.z));
 						neighbors.Add("RightDown", new Vector3(pos.x + Mathf.Sign(pos.z) * offset, pos.y - offset, pos.z));
 						neighbors.Add("CenterUp", new Vector3(pos.x, pos.y + offset, pos.z));
 						neighbors.Add("CenterDown", new Vector3(pos.x, pos.y - offset, pos.z));
@@ -639,47 +620,51 @@ public class TerrainController
 	private void PreComputeRotations()
 	{
 		Dictionary<string, Utils.RotateType> rotations = new Dictionary<string, Utils.RotateType>();
-
-		rotations.Clear();
 		rotations.Add("pos_y/", Utils.RotateType.Rotate270);
 		rotations.Add("pos_z/", Utils.RotateType.Rotate0);
 		rotations.Add("neg_z/", Utils.RotateType.Rotate0);
 		rotations.Add("neg_y/", Utils.RotateType.Rotate90);
+		rotations.Add("neg_x/", Utils.RotateType.Rotate0);
 		m_rotations.Add("neg_x/", rotations);
 
-		rotations.Clear();
+		rotations = new Dictionary<string, Utils.RotateType>();
 		rotations.Add("pos_y/", Utils.RotateType.Rotate90);
 		rotations.Add("pos_z/", Utils.RotateType.Rotate0);
 		rotations.Add("neg_z/", Utils.RotateType.Rotate0);
 		rotations.Add("neg_y/", Utils.RotateType.Rotate270);
+		rotations.Add("pos_x/", Utils.RotateType.Rotate0);
 		m_rotations.Add("pos_x/", rotations);
 
-		rotations.Clear();
+		rotations = new Dictionary<string, Utils.RotateType>();
 		rotations.Add("pos_y/", Utils.RotateType.Rotate0);
 		rotations.Add("pos_x/", Utils.RotateType.Rotate0);
 		rotations.Add("neg_x/", Utils.RotateType.Rotate0);
 		rotations.Add("neg_y/", Utils.RotateType.Rotate0);
+		rotations.Add("neg_z/", Utils.RotateType.Rotate0);
 		m_rotations.Add("neg_z/", rotations);
 
-		rotations.Clear();
+		rotations = new Dictionary<string, Utils.RotateType>();
 		rotations.Add("pos_y/", Utils.RotateType.Rotate180);
 		rotations.Add("pos_x/", Utils.RotateType.Rotate0);
 		rotations.Add("neg_x/", Utils.RotateType.Rotate0);
 		rotations.Add("neg_y/", Utils.RotateType.Rotate180);
+		rotations.Add("pos_z/", Utils.RotateType.Rotate0);
 		m_rotations.Add("pos_z/", rotations);
 
-		rotations.Clear();
+		rotations = new Dictionary<string, Utils.RotateType>();
 		rotations.Add("pos_z/", Utils.RotateType.Rotate180);
 		rotations.Add("pos_x/", Utils.RotateType.Rotate90);
 		rotations.Add("neg_x/", Utils.RotateType.Rotate270);
 		rotations.Add("neg_z/", Utils.RotateType.Rotate0);
+		rotations.Add("neg_y/", Utils.RotateType.Rotate0);
 		m_rotations.Add("neg_y/", rotations);
 
-		rotations.Clear();
+		rotations = new Dictionary<string, Utils.RotateType>();
 		rotations.Add("pos_z/", Utils.RotateType.Rotate180);
 		rotations.Add("pos_x/", Utils.RotateType.Rotate90);
 		rotations.Add("neg_x/", Utils.RotateType.Rotate270);
 		rotations.Add("neg_z/", Utils.RotateType.Rotate0);
+		rotations.Add("pos_y/", Utils.RotateType.Rotate0);
 		m_rotations.Add("pos_y/", rotations);
 	}
 
@@ -697,4 +682,5 @@ public class TerrainController
 	private float m_radius = 0.0f;
 	private int m_terrainTextureSize = 514;
 	private int m_planeSize = 128;
+	private Vector3[] m_curPlaneInitialVertices = null;
 }

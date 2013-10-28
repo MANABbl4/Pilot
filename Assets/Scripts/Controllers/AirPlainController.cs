@@ -14,7 +14,7 @@ public class AirPlainController : MonoBehaviour
 	}
 
 	// Use this for initialization
-	private void Start ()
+	public void Start ()
 	{
 		m_startRot = transform.rotation.eulerAngles;
 		m_screenCenter.x = Screen.width / 2;
@@ -23,11 +23,16 @@ public class AirPlainController : MonoBehaviour
 		/*gameObject.transform.rotation = Quaternion.identity;
 		gameObject.transform.rotation *= Quaternion.Euler(m_startRot);*/
 		SetLookAt(Earth.Instance().GetCenter());
+
+		m_started = true;
 	}
 	
 	// Update is called once per frame
-	private void Update()
+	public void Tick()
 	{
+		if (!m_started)
+			return;
+
 #if UNITY_EDITOR
 		if (Input.GetMouseButtonUp(0))
 		{
@@ -140,4 +145,5 @@ public class AirPlainController : MonoBehaviour
 	private Vector2 m_screenCenter;
 	private float m_speed = 150.0f;
 	private float m_height = 100.0f;
+	private bool m_started = false;
 }

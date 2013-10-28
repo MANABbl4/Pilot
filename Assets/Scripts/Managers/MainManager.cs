@@ -58,6 +58,9 @@ public class MainManager : SingletonGameObject<MainManager>
 	private void Update()
 	{
 		m_player.Tick();
+
+		Earth.Instance().Tick();
+		CameraManager.Instance().Tick();
 	}
 
 	[SerializeField]
