@@ -49,7 +49,7 @@ public class TerrainController
 		m_cube.transform.localScale = Vector3.one;
 		m_cube.transform.position = m_center;
 
-		m_curPlane = InitPlane();
+		m_curPlane = InitPlane(Color.green);
 		m_curPlane.SetActive(false);
 		MeshFilter mf = m_curPlane.GetComponent<MeshFilter>();
 		if (mf != null)
@@ -72,30 +72,6 @@ public class TerrainController
 	{
 		if (m_cube != null && MainManager.Instance().GetPlayer().GetAirPlane() != null)
 		{
-			/*TerrainTextureInfo info = GetTerrainTexture(MainManager.Instance().GetPlayer().GetAirPlane().transform.position,
-				m_center, m_detailsLevel);
-			if (info != null && m_currentTerrainTexture != info.m_path)
-			{
-				m_currentTerrainTexture = info.m_path;
-				Dictionary<string, TerrainTextureInfo> neghbors = GetAroundTextures(info, m_detailsLevel);
-
-				string log = m_currentTerrainTexture + "\r\nNeighbors:";
-
-				if (neghbors != null)
-				{
-					foreach (KeyValuePair<string, TerrainTextureInfo> inf in neghbors)
-					{
-						log += "\r\n" + inf.Key + " " + inf.Value.m_path;
-					}
-				}
-				else
-				{
-					log += "\r\nNull neighbors";
-				}
-
-				Log(log);
-			}*/
-
 			if (m_curPlane.activeSelf)
 			{
 				LoadTerrainByPosition(MainManager.Instance().GetPlayer().GetAirPlane().transform.position);
@@ -105,22 +81,36 @@ public class TerrainController
 
 	public void LoadTerrainByPosition(Vector3 pos)
 	{
-		//1. Check need loading
-		//1yes.1. Calc loading texture
-		//1yes.2. Load 3 * 3 = 9 textures m_terrainTextureSize*m_terrainTextureSize pixels with center texture in player position
-		//1no.1. Check need recalc plane
-		//1no.1yes. recalc
-		//1no.1no. do nothing
-
-		//calc m_detailsLevel
-		SetVisibleEarth(false);
-
+		//SetVisibleEarth(false);
 		m_curPlane.SetActive(true);
+
+		Vector3 hitPos = Vector3.zero;
+		TerrainTextureInfo info = GetTerrainTexture(pos, m_center, m_detailsLevel, out hitPos);
+		if (info == null)
+		{
+			return;
+		}
+
+		// TODO: calc m_detailsLevel
+		// HACK
+		bool detailsChanged = false;
+		if (Input.GetKeyUp(KeyCode.Plus) && m_detailsLevel < m_maxDetailsLevel)
+		{
+			++m_detailsLevel;
+			detailsChanged = true;
+			Log("KeyCode.Plus");
+		}
+
+		if (Input.GetKeyUp(KeyCode.Minus) && m_detailsLevel > m_minDetailsLevel)
+		{
+			--m_detailsLevel;
+			detailsChanged = true;
+			Log("KeyCode.Minus");
+		}
+
 		int offsetX = m_terrainTextureSize;
 		int offsetY = m_terrainTextureSize;
-
-		TerrainTextureInfo info = GetTerrainTexture(pos, m_center, m_detailsLevel);
-		if (m_currentTerrainTexture != info.m_path)
+		if (m_currentTerrainTexture != info.m_path || detailsChanged)
 		{
 			// CenterCenter
 			offsetX = m_terrainTextureSize;
@@ -164,8 +154,9 @@ public class TerrainController
 			}
 			else
 			{
-				FillTerrainData(m_terrainData, m_terrainTextureSize, null,
-					m_rotations[info.m_side][GetAroundTextures(around["LeftCenter"], m_detailsLevel)["CenterUp"].m_side], offsetX, offsetY);
+				TerrainTextureInfo inf = GetAroundTextures(around["LeftCenter"], m_detailsLevel)["CenterUp"];
+				FillTerrainData(m_terrainData, m_terrainTextureSize, inf,
+					m_rotations[around["LeftCenter"].m_side][inf.m_side], offsetX, offsetY);
 			}
 
 			// RightUp
@@ -178,8 +169,9 @@ public class TerrainController
 			}
 			else
 			{
-				FillTerrainData(m_terrainData, m_terrainTextureSize, null,
-					m_rotations[info.m_side][GetAroundTextures(around["RightCenter"], m_detailsLevel)["CenterUp"].m_side], offsetX, offsetY);
+				TerrainTextureInfo inf = GetAroundTextures(around["RightCenter"], m_detailsLevel)["CenterUp"];
+				FillTerrainData(m_terrainData, m_terrainTextureSize, inf,
+					m_rotations[around["RightCenter"].m_side][inf.m_side], offsetX, offsetY);
 			}
 
 			// LeftDown
@@ -192,8 +184,9 @@ public class TerrainController
 			}
 			else
 			{
-				FillTerrainData(m_terrainData, m_terrainTextureSize, null,
-					m_rotations[info.m_side][GetAroundTextures(around["LeftCenter"], m_detailsLevel)["CenterDown"].m_side], offsetX, offsetY);
+				TerrainTextureInfo inf = GetAroundTextures(around["LeftCenter"], m_detailsLevel)["CenterDown"];
+				FillTerrainData(m_terrainData, m_terrainTextureSize, inf,
+					m_rotations[around["LeftCenter"].m_side][inf.m_side], offsetX, offsetY);
 			}
 
 			// RightDown
@@ -206,8 +199,9 @@ public class TerrainController
 			}
 			else
 			{
-				FillTerrainData(m_terrainData, m_terrainTextureSize, null,
-					m_rotations[info.m_side][GetAroundTextures(around["RightCenter"], m_detailsLevel)["CenterDown"].m_side], offsetX, offsetY);
+				TerrainTextureInfo inf = GetAroundTextures(around["RightCenter"], m_detailsLevel)["CenterDown"];
+				FillTerrainData(m_terrainData, m_terrainTextureSize, inf,
+					m_rotations[around["RightCenter"].m_side][inf.m_side], offsetX, offsetY);
 			}
 
 			m_currentTerrainTexture = info.m_path;
@@ -216,7 +210,7 @@ public class TerrainController
 		offsetX = (int)(m_terrainTextureSize * (1.0f + info.m_hitPos.x)) - (m_planeSize / 2 - 1);
 		offsetY = (int)(m_terrainTextureSize * (1.0f + info.m_hitPos.y)) - (m_planeSize / 2 - 1);
 		ResetPlane(m_curPlane, m_detailsLevel);
-		m_curPlane = InitTerrain(m_curPlane, m_terrainData, GetRotation(info.m_side), offsetX, offsetY);
+		m_curPlane = InitTerrain(m_curPlane, m_terrainData, GetRotation(info.m_side), offsetX, offsetY, hitPos, m_detailsLevel);
 	}
 
 	private void FillTerrainData(ushort[,] terrainData, int terrainTextureSize, TerrainTextureInfo info, Utils.RotateType rotation, int offsetX, int offsetY)
@@ -245,7 +239,7 @@ public class TerrainController
 		}
 	}
 
-	private void ResetPlane(GameObject plane)
+	private void ResetPlane(GameObject plane, int detailsLevel)
 	{
 		MeshFilter mf = plane.GetComponent<MeshFilter>();
 		if (mf != null)
@@ -266,19 +260,19 @@ public class TerrainController
 		ushort[,] data = null;
 
 		data = LoadTerrainData("Assets/Textures/Earth_bump/neg_y/0.raw", m_planeSize, m_planeSize);
-		m_earth.Add(InitTerrain(InitPlane(), data, GetRotation("neg_y/"), 0, 0));
+		m_earth.Add(InitTerrain(InitPlane(Color.white), data, GetRotation("neg_y/"), 0, 0, Vector2.zero, 0));
 		data = LoadTerrainData("Assets/Textures/Earth_bump/pos_y/0.raw", m_planeSize, m_planeSize);
-		m_earth.Add(InitTerrain(InitPlane(), data, GetRotation("pos_y/"), 0, 0));
+		m_earth.Add(InitTerrain(InitPlane(Color.white), data, GetRotation("pos_y/"), 0, 0, Vector2.zero, 0));
 
 		data = LoadTerrainData("Assets/Textures/Earth_bump/pos_z/0.raw", m_planeSize, m_planeSize);
-		m_earth.Add(InitTerrain(InitPlane(), data, GetRotation("pos_z/"), 0, 0));
+		m_earth.Add(InitTerrain(InitPlane(Color.white), data, GetRotation("pos_z/"), 0, 0, Vector2.zero, 0));
 		data = LoadTerrainData("Assets/Textures/Earth_bump/neg_z/0.raw", m_planeSize, m_planeSize);
-		m_earth.Add(InitTerrain(InitPlane(), data, GetRotation("neg_z/"), 0, 0));
+		m_earth.Add(InitTerrain(InitPlane(Color.white), data, GetRotation("neg_z/"), 0, 0, Vector2.zero, 0));
 
 		data = LoadTerrainData("Assets/Textures/Earth_bump/neg_x/0.raw", m_planeSize, m_planeSize);
-		m_earth.Add(InitTerrain(InitPlane(), data, GetRotation("neg_x/"), 0, 0));
+		m_earth.Add(InitTerrain(InitPlane(Color.white), data, GetRotation("neg_x/"), 0, 0, Vector2.zero, 0));
 		data = LoadTerrainData("Assets/Textures/Earth_bump/pos_x/0.raw", m_planeSize, m_planeSize);
-		m_earth.Add(InitTerrain(InitPlane(), data, GetRotation("pos_x/"), 0, 0));
+		m_earth.Add(InitTerrain(InitPlane(Color.white), data, GetRotation("pos_x/"), 0, 0, Vector2.zero, 0));
 	}
 
 	private void SetVisibleEarth(bool val)
@@ -289,10 +283,15 @@ public class TerrainController
 		}
 	}
 
-	private GameObject InitTerrain(GameObject plane, ushort[,] terrainData, Quaternion rot, int fromX, int fromY)
+	private GameObject InitTerrain(GameObject plane, ushort[,] terrainData, Quaternion rot, int fromX, int fromY, Vector2 center, int detailsLevel)
 	{
 		float min = 0;
-
+		float count = Mathf.Pow(2, detailsLevel);
+		float scale = 1.0f;
+		if (terrainData.GetLength(0) > 128)
+		{
+			scale = 128.0f / 514.0f;
+		}
 		float h = 63.5f;
 		Vector3 c = m_center;
 		//float r = m_radius;
@@ -308,9 +307,13 @@ public class TerrainController
 				int i = (int)((vertices[k].x + h));
 				int j = (int)((vertices[k].z + h));
 
+				vertices[k].x = vertices[k].x * scale / count + center.y * h * 2;
+				vertices[k].z = vertices[k].z * scale / count + center.x * h * 2;
+				//offset by center
+
 				vertices[k].y += h;
 				Vector3 d = (vertices[k] - c).normalized;
-				vertices[k] = d * (h + (float)(terrainData[i + fromX, j + fromY] - min) / 10000.0f);
+				vertices[k] = d * (h + (float)(terrainData[i + fromY, j + fromX] - min) / 10000.0f);
 			}
 
 			m.vertices = vertices;
@@ -325,7 +328,7 @@ public class TerrainController
 		return plane;
 	}
 
-	private GameObject InitPlane()
+	private GameObject InitPlane(Color color)
 	{
 		Object resource = GameObject.Instantiate(Resources.Load("Prefabs/plane"));
 		if (resource != null)
@@ -336,6 +339,22 @@ public class TerrainController
 			if (plane != null)
 			{
 				plane.name = resource.name;
+
+				MeshFilter mf = plane.GetComponent<MeshFilter>();
+				if (mf != null)
+				{
+					Mesh m = mf.mesh;
+					Color[] colors = m.colors;
+					for (int i = 0; i < colors.Length; ++i)
+					{
+						colors[i] = color;
+					}
+
+					m.colors = colors;
+					mf.sharedMesh = m;
+					mf.sharedMesh.RecalculateNormals();
+					mf.sharedMesh.RecalculateBounds();
+				}
 
 				plane.transform.rotation = Quaternion.identity;
 				plane.transform.position = m_center;
@@ -428,10 +447,10 @@ public class TerrainController
 		return rot;
 	}
 
-	private TerrainTextureInfo GetTerrainTexture(Vector3 pos, Vector3 center, int detailsLevel)
+	private TerrainTextureInfo GetTerrainTexture(Vector3 pos, Vector3 center, int detailsLevel, out Vector3 hitPos)
 	{
 		TerrainTextureInfo info = new TerrainTextureInfo();
-
+		hitPos = Vector2.zero;
 		RaycastHit hit;
 		Ray ray = new Ray(pos, center - pos);
 		if (m_cube.collider.Raycast(ray, out hit, (center - pos).magnitude))
@@ -443,7 +462,6 @@ public class TerrainController
 				return null;
 			}
 
-			Vector2 hitPos = Vector2.zero;
 			if (hit.point.z == m_cube.collider.bounds.extents.z)
 			{
 				info.m_side = "pos_z/";
@@ -574,12 +592,13 @@ public class TerrainController
 						neighbors.Add("LeftDown", new Vector3(pos.x - Mathf.Sign(pos.z) * offset, pos.y - offset, pos.z));
 					}
 
-					TerrainTextureInfo info = GetTerrainTexture(pos, m_center, detailsLevel);
+					Vector3 hitPos = Vector3.zero;
+					TerrainTextureInfo info = GetTerrainTexture(pos, m_center, detailsLevel, out hitPos);
 
 					Dictionary<string, TerrainTextureInfo> terrainNeighbors = new Dictionary<string, TerrainTextureInfo>();
 					foreach (KeyValuePair<string, Vector3> neighbor in neighbors)
 					{
-						TerrainTextureInfo terrainNeighbor = GetTerrainTexture(neighbor.Value, m_center, detailsLevel);
+						TerrainTextureInfo terrainNeighbor = GetTerrainTexture(neighbor.Value, m_center, detailsLevel, out hitPos);
 						if (terrainNeighbor != null)
 						{
 							bool contains = false;
