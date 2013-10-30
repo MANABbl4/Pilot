@@ -209,6 +209,7 @@ public class TerrainController
 
 		offsetX = (int)(m_terrainTextureSize * (1.0f + info.m_hitPos.x)) - (m_planeSize / 2 - 1);
 		offsetY = (int)(m_terrainTextureSize * (1.0f + info.m_hitPos.y)) - (m_planeSize / 2 - 1);
+		Debug.Log("info.m_hitPos " + info.m_hitPos + " offsetX " + offsetX + " offsetY " + offsetY);
 		ResetPlane(m_curPlane, m_detailsLevel);
 		m_curPlane = InitTerrain(m_curPlane, m_terrainData, GetRotation(info.m_side), offsetX, offsetY, hitPos, m_detailsLevel);
 	}
@@ -507,8 +508,8 @@ public class TerrainController
 
 			info.m_x = (int)(count * (hitPos.x + 0.5f));
 			info.m_y = (int)(count * (hitPos.y + 0.5f));
-			info.m_hitPos.x = hitPos.x + 0.5f - (((float)info.m_x) / count);
-			info.m_hitPos.y = hitPos.y + 0.5f - (((float)info.m_y) / count);
+			info.m_hitPos.x = count * (hitPos.x + 0.5f - (((float)info.m_x) / count));
+			info.m_hitPos.y = count * (hitPos.y + 0.5f - (((float)info.m_y) / count));
 			info.m_path = "Assets/Textures/Earth_bump/" + info.m_side + detailsLevel + "_" + info.m_x + "_" + info.m_y + ".raw";
 
 			return info;
