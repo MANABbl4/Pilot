@@ -120,6 +120,10 @@ public class TerrainController
 
 			Dictionary<string, TerrainTextureInfo> around = GetAroundTextures(info, m_detailsLevel);
 
+			Debug.Log("CenterCenter " + info + "\r\naround[\"RightCenter\"] " + around["RightCenter"]
+				 + "\r\naround[\"LeftCenter\"] " + around["LeftCenter"]
+				  + "\r\naround[\"CenterUp\"] " + around["CenterUp"]
+				   + "\r\naround[\"CenterDown\"] " + around["CenterDown"]);
 			// CenterUp
 			offsetX = m_terrainTextureSize;
 			offsetY = 0;
@@ -207,10 +211,10 @@ public class TerrainController
 			m_currentTerrainTexture = info.m_path;
 		}
 
+		//Debug.Log("path " + info.m_path + " side " + info.m_side);
 		offsetX = (int)(m_terrainTextureSize * (1.0f + info.m_hitPos.x)) - (m_planeSize / 2 - 1);
 		offsetY = (int)(m_terrainTextureSize * (1.0f + info.m_hitPos.y)) - (m_planeSize / 2 - 1);
-		Debug.Log("info.m_hitPos " + info.m_hitPos + " offsetX " + offsetX + " offsetY " + offsetY);
-		ResetPlane(m_curPlane, m_detailsLevel);
+		ResetPlane(m_curPlane);
 		m_curPlane = InitTerrain(m_curPlane, m_terrainData, GetRotation(info.m_side), offsetX, offsetY, hitPos, m_detailsLevel);
 	}
 
@@ -240,7 +244,7 @@ public class TerrainController
 		}
 	}
 
-	private void ResetPlane(GameObject plane, int detailsLevel)
+	private void ResetPlane(GameObject plane)
 	{
 		MeshFilter mf = plane.GetComponent<MeshFilter>();
 		if (mf != null)
@@ -346,6 +350,10 @@ public class TerrainController
 				{
 					Mesh m = mf.mesh;
 					Color[] colors = m.colors;
+					if (colors.Length == 0)
+					{
+						colors = new Color[m.vertices.Length];
+					}
 					for (int i = 0; i < colors.Length; ++i)
 					{
 						colors[i] = color;
@@ -583,14 +591,14 @@ public class TerrainController
 						pos.x = (((float)i + 0.5f) * offset) - 0.5f;
 						pos.y = (((float)j + 0.5f) * offset) - 0.5f;
 
-						neighbors.Add("RightUp", new Vector3(pos.x + Mathf.Sign(pos.z) * offset, pos.y + offset, pos.z));
-						neighbors.Add("RightCenter", new Vector3(pos.x + Mathf.Sign(pos.z) * offset, pos.y, pos.z));
-						neighbors.Add("RightDown", new Vector3(pos.x + Mathf.Sign(pos.z) * offset, pos.y - offset, pos.z));
+						neighbors.Add("LeftUp", new Vector3(pos.x + Mathf.Sign(pos.z) * offset, pos.y + offset, pos.z));
+						neighbors.Add("LeftCenter", new Vector3(pos.x + Mathf.Sign(pos.z) * offset, pos.y, pos.z));
+						neighbors.Add("LeftDown", new Vector3(pos.x + Mathf.Sign(pos.z) * offset, pos.y - offset, pos.z));
 						neighbors.Add("CenterUp", new Vector3(pos.x, pos.y + offset, pos.z));
 						neighbors.Add("CenterDown", new Vector3(pos.x, pos.y - offset, pos.z));
-						neighbors.Add("LeftUp", new Vector3(pos.x - Mathf.Sign(pos.z) * offset, pos.y + offset, pos.z));
-						neighbors.Add("LeftCenter", new Vector3(pos.x - Mathf.Sign(pos.z) * offset, pos.y, pos.z));
-						neighbors.Add("LeftDown", new Vector3(pos.x - Mathf.Sign(pos.z) * offset, pos.y - offset, pos.z));
+						neighbors.Add("RightUp", new Vector3(pos.x - Mathf.Sign(pos.z) * offset, pos.y + offset, pos.z));
+						neighbors.Add("RightCenter", new Vector3(pos.x - Mathf.Sign(pos.z) * offset, pos.y, pos.z));
+						neighbors.Add("RightDown", new Vector3(pos.x - Mathf.Sign(pos.z) * offset, pos.y - offset, pos.z));
 					}
 
 					Vector3 hitPos = Vector3.zero;
@@ -688,7 +696,7 @@ public class TerrainController
 		m_rotations.Add("pos_y/", rotations);
 	}
 
-	private int m_detailsLevel = 1;
+	private int m_detailsLevel = 0;
 	private int m_minDetailsLevel = 0;
 	private int m_maxDetailsLevel = 3;
 	private ushort[,] m_terrainData = null;
