@@ -49,13 +49,23 @@ public class TerrainController
 		m_cube.transform.localScale = Vector3.one;
 		m_cube.transform.position = m_center;
 
-		m_curPlane = InitPlane(Color.green);
+		m_curPlane = InitPlane(Color.yellow);
 		m_curPlane.SetActive(false);
 		MeshFilter mf = m_curPlane.GetComponent<MeshFilter>();
 		if (mf != null)
 		{
 			Mesh m = mf.mesh;
 			m_curPlaneInitialVertices = m.vertices;
+		}
+
+		m_curPlanes = new GameObject[m_debugPlanesCount, m_debugPlanesCount];
+		for (int i = 0; i < m_debugPlanesCount; ++i)
+		{
+			for (int j = 0; j < m_debugPlanesCount; ++j)
+			{
+				m_curPlanes[i, j] = InitPlane(Color.gray);
+				m_curPlanes[i, j].SetActive(true);
+			}
 		}
 
 		PreComputeTerrainTextures();
@@ -222,11 +232,27 @@ public class TerrainController
 			m_currentTerrainTexture = info.m_path;
 		}
 
-		//Debug.Log("path " + info.m_path + " side " + info.m_side);
 		offsetX = (int)(m_terrainTextureSize * (1.0f + info.m_hitPos.x)) - (m_planeSize / 2 - 1);
 		offsetY = (int)(m_terrainTextureSize * (1.0f + info.m_hitPos.y)) - (m_planeSize / 2 - 1);
 		ResetPlane(m_curPlane);
 		m_curPlane = InitTerrain(m_curPlane, m_terrainData, GetRotation(info.m_side), offsetX, offsetY, hitPos, m_detailsLevel);
+
+		float count = (int)Mathf.Pow(2, m_detailsLevel);
+		float len = 128.0f / (514.0f * count);
+		for (int i = 0; i < m_debugPlanesCount; ++i)
+		{
+			for (int j = 0; j < m_debugPlanesCount; ++j)
+			{
+				Vector2 hp = hitPos;
+				int ofX = offsetX + (j - 2) * 127;
+				int ofY = offsetY + (i - 2) * 127;
+				hp.x += (j - 2) * len;
+				hp.y += (i - 2) * len;
+				ResetPlane(m_curPlanes[i, j]);
+				ResetPlane(m_curPlanes[i, j]);
+				m_curPlanes[i, j] = InitTerrain(m_curPlanes[i, j], m_terrainData, GetRotation(info.m_side), ofX, ofY, hp, m_detailsLevel);
+			}
+		}
 	}
 
 	private void FillTerrainData(ushort[,] terrainData, int terrainTextureSize, TerrainTextureInfo info, Utils.RotateType rotation, int offsetX, int offsetY)
@@ -698,6 +724,7 @@ public class TerrainController
 	private List<GameObject> m_earth = new List<GameObject>();
 	private Dictionary<string, Dictionary<string, Utils.RotateType>> m_rotations = new Dictionary<string, Dictionary<string, Utils.RotateType>>();
 	private GameObject m_curPlane = null;
+	private GameObject[,] m_curPlanes = null;
 	private GameObject m_cube = null;
 	private string m_currentTerrainTexture = string.Empty;
 	private Vector3 m_center = Vector3.zero;
@@ -705,4 +732,5 @@ public class TerrainController
 	private int m_terrainTextureSize = 514;
 	private int m_planeSize = 128;
 	private Vector3[] m_curPlaneInitialVertices = null;
+	private int m_debugPlanesCount = 5;
 }
