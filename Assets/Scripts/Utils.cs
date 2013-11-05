@@ -15,6 +15,7 @@ public static class Utils
 	{
 		if (type == RotateType.RotateUnknown || type == RotateType.Rotate0)
 		{
+			Debug.Log("Rotate. type " + type);
 			return;
 		}
 
@@ -23,45 +24,62 @@ public static class Utils
 
 		if (height == 0 || height != width)
 		{
+			Debug.Log("Rotate. height == 0 || height != width");
 			return;
 		}
 
+		ushort[,] temp = new ushort[height, width];
+
 		if (type == RotateType.Rotate180)
 		{
+			Debug.Log("Rotate. type " + type);
 			for (int i = 0; i < height; ++i)
 			{
 				for (int j = 0; j < width; ++j)
 				{
-					ushort temp = self[height - i - 1, width - j - 1];
+					temp[i, j] = self[height - i - 1, width - j - 1];
+					/*ushort temp = self[height - i - 1, width - j - 1];
 					self[height - i - 1, width - j - 1] = self[i, j];
-					self[i, j] = temp;
+					self[i, j] = temp;*/
 				}
 			}
 		}
-
-		if (type == RotateType.Rotate270)
+		else if (type == RotateType.Rotate270)
 		{
 			for (int i = 0; i < height; ++i)
 			{
 				for (int j = 0; j < width; ++j)
 				{
-					ushort temp = self[j, i];
+					temp[i, j] = self[width - j - 1, i];
+					/*ushort temp = self[j, i];
 					self[j, i] = self[i, j];
-					self[i, j] = temp;
+					self[i, j] = temp;*/
 				}
 			}
 		}
-
-		if (type == RotateType.Rotate90)
+		else if (type == RotateType.Rotate90)
 		{
 			for (int i = 0; i < height; ++i)
 			{
 				for (int j = 0; j < width; ++j)
 				{
-					ushort temp = self[width - j - 1, i];
+					temp[i, j] = self[j, height - 1 - i];
+					/*ushort temp = self[width - j - 1, i];
 					self[width - j - 1, i] = self[i, j];
-					self[i, j] = temp;
+					self[i, j] = temp;*/
 				}
+			}
+		}
+		else
+		{
+			Debug.LogError("Rotate. Error type!");
+		}
+
+		for (int i = 0; i < height; ++i)
+		{
+			for (int j = 0; j < width; ++j)
+			{
+				self[i, j] = temp[i, j];
 			}
 		}
 	}

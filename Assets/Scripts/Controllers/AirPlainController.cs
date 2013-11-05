@@ -26,6 +26,11 @@ public class AirPlainController : MonoBehaviour
 
 		m_started = true;
 	}
+
+	/*public void OnGUI()
+	{
+		m_speed = GUI.HorizontalSlider(new Rect(Screen.width * 0.9f, 10.0f, Screen.width * 0.08f, 20.0f), m_speed, 0.0f, 1000.0f);
+	}*/
 	
 	// Update is called once per frame
 	public void Tick()
