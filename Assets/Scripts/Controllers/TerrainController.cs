@@ -58,6 +58,11 @@ public class TerrainController
 			m_curPlaneInitialVertices = m.vertices;
 		}
 
+		m_neighborPlaneX = InitPlane(Color.yellow);
+		m_neighborPlaneX.SetActive(false);
+		m_neighborPlaneY = InitPlane(Color.yellow);
+		m_neighborPlaneY.SetActive(false);
+
 		/*m_curPlanes = new GameObject[m_debugPlanesCount, m_debugPlanesCount];
 		for (int i = 0; i < m_debugPlanesCount; ++i)
 		{
@@ -93,6 +98,8 @@ public class TerrainController
 	{
 		//SetVisibleEarth(false);
 		m_curPlane.SetActive(true);
+		m_neighborPlaneX.SetActive(true);
+		m_neighborPlaneY.SetActive(true);
 
 		Vector3 hitPos = Vector3.zero;
 		TerrainTextureInfo info = GetTerrainTexture(pos, m_center, m_detailsLevel, out hitPos);
@@ -128,6 +135,19 @@ public class TerrainController
 
 		offsetX = (int)(m_terrainTextureSize * (1.0f + info.m_hitPos.x)) - (m_planeSize / 2 - 1);
 		offsetY = (int)(m_terrainTextureSize * (1.0f + info.m_hitPos.y)) - (m_planeSize / 2 - 1);
+
+		if (offsetX < m_terrainTextureSize)
+		{
+			ResetPlane(m_neighborPlaneX);
+			m_neighborPlaneX = InitTerrain(m_neighborPlaneX, m_terrainData, GetRotation(info.m_side), m_terrainTextureSize - m_planeSize + 1, offsetY, hitPos, m_detailsLevel);
+			offsetX = m_terrainTextureSize;
+		}
+		else if (offsetX > m_terrainTextureSize + m_terrainTextureSize - m_planeSize + 1)
+		{
+			ResetPlane(m_neighborPlaneX);
+			m_neighborPlaneX = InitTerrain(m_neighborPlaneX, m_terrainData, GetRotation(info.m_side), m_terrainTextureSize + m_terrainTextureSize, offsetY, hitPos, m_detailsLevel);
+			offsetX = m_terrainTextureSize + m_terrainTextureSize - m_planeSize + 1;
+		}
 		ResetPlane(m_curPlane);
 		m_curPlane = InitTerrain(m_curPlane, m_terrainData, GetRotation(info.m_side), offsetX, offsetY, hitPos, m_detailsLevel);
 
@@ -418,7 +438,6 @@ public class TerrainController
 	private ushort[,] LoadTerrainData(string fileName, int width, int height)
 	{
 		ushort[,] data = new ushort[height, width];
-		//List<List<ushort>> data1 = new List<List<ushort>>();
 
 		ushort max = ushort.MinValue;
 		ushort min = ushort.MaxValue;
@@ -427,8 +446,6 @@ public class TerrainController
 		{
 			for (int i = 0; i < height; ++i)
 			{
-				//List<ushort> row = new List<ushort>();
-
 				for (int j = 0; j < width; ++j)
 				{
 					ushort d = reader.ReadUInt16();
@@ -443,10 +460,7 @@ public class TerrainController
 					}
 
 					data[i, j] = d;
-					//row.Add(d);
 				}
-
-				//data1.Add(row);
 			}
 		}
 
@@ -735,6 +749,8 @@ public class TerrainController
 	private List<GameObject> m_earth = new List<GameObject>();
 	private Dictionary<string, Dictionary<string, Utils.RotateType>> m_rotations = new Dictionary<string, Dictionary<string, Utils.RotateType>>();
 	private GameObject m_curPlane = null;
+	private GameObject m_neighborPlaneX = null;
+	private GameObject m_neighborPlaneY = null;
 	//private GameObject[,] m_curPlanes = null;
 	private GameObject m_cube = null;
 	private string m_currentTerrainTexture = string.Empty;
