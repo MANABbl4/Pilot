@@ -98,8 +98,8 @@ public class TerrainController
 	{
 		//SetVisibleEarth(false);
 		m_curPlane.SetActive(true);
-		m_neighborPlaneX.SetActive(true);
-		m_neighborPlaneY.SetActive(true);
+		//m_neighborPlaneX.SetActive(true);
+		//m_neighborPlaneY.SetActive(true);
 
 		Vector3 hitPos = Vector3.zero;
 		TerrainTextureInfo info = GetTerrainTexture(pos, m_center, m_detailsLevel, out hitPos);
@@ -136,18 +136,44 @@ public class TerrainController
 		offsetX = (int)(m_terrainTextureSize * (1.0f + info.m_hitPos.x)) - (m_planeSize / 2 - 1);
 		offsetY = (int)(m_terrainTextureSize * (1.0f + info.m_hitPos.y)) - (m_planeSize / 2 - 1);
 
-		if (offsetX < m_terrainTextureSize)
+		/*if (offsetX < m_terrainTextureSize)
 		{
+			m_neighborPlaneX.SetActive(true);
 			ResetPlane(m_neighborPlaneX);
 			m_neighborPlaneX = InitTerrain(m_neighborPlaneX, m_terrainData, GetRotation(info.m_side), m_terrainTextureSize - m_planeSize + 1, offsetY, hitPos, m_detailsLevel);
 			offsetX = m_terrainTextureSize;
 		}
 		else if (offsetX > m_terrainTextureSize + m_terrainTextureSize - m_planeSize + 1)
 		{
+			m_neighborPlaneX.SetActive(true);
 			ResetPlane(m_neighborPlaneX);
 			m_neighborPlaneX = InitTerrain(m_neighborPlaneX, m_terrainData, GetRotation(info.m_side), m_terrainTextureSize + m_terrainTextureSize, offsetY, hitPos, m_detailsLevel);
 			offsetX = m_terrainTextureSize + m_terrainTextureSize - m_planeSize + 1;
 		}
+		else
+		{
+			m_neighborPlaneX.SetActive(false);
+		}
+
+		if (offsetY < m_terrainTextureSize)
+		{
+			m_neighborPlaneY.SetActive(true);
+			ResetPlane(m_neighborPlaneY);
+			m_neighborPlaneX = InitTerrain(m_neighborPlaneY, m_terrainData, GetRotation(info.m_side), offsetX, m_terrainTextureSize - m_planeSize + 1, hitPos, m_detailsLevel);
+			offsetY = m_terrainTextureSize;
+		}
+		else if (offsetY > m_terrainTextureSize + m_terrainTextureSize - m_planeSize + 1)
+		{
+			m_neighborPlaneY.SetActive(true);
+			ResetPlane(m_neighborPlaneY);
+			m_neighborPlaneY = InitTerrain(m_neighborPlaneX, m_terrainData, GetRotation(info.m_side), offsetX, m_terrainTextureSize + m_terrainTextureSize, hitPos, m_detailsLevel);
+			offsetY = m_terrainTextureSize + m_terrainTextureSize - m_planeSize + 1;
+		}
+		else
+		{
+			m_neighborPlaneY.SetActive(false);
+		}*/
+
 		ResetPlane(m_curPlane);
 		m_curPlane = InitTerrain(m_curPlane, m_terrainData, GetRotation(info.m_side), offsetX, offsetY, hitPos, m_detailsLevel);
 
@@ -622,14 +648,14 @@ public class TerrainController
 						pos.x = (((float)i + 0.5f) * offset) - 0.5f;
 						pos.z = (((float)j + 0.5f) * offset) - 0.5f;
 
-						neighbors.Add("RightUp", new Vector3(pos.x + Mathf.Sign(pos.y) * offset, pos.y, pos.z + offset));
-						neighbors.Add("RightCenter", new Vector3(pos.x + Mathf.Sign(pos.y) * offset, pos.y, pos.z));
-						neighbors.Add("RightDown", new Vector3(pos.x + Mathf.Sign(pos.y) * offset, pos.y, pos.z - offset));
-						neighbors.Add("CenterUp", new Vector3(pos.x, pos.y, pos.z + offset));
-						neighbors.Add("CenterDown", new Vector3(pos.x, pos.y, pos.z - offset));
-						neighbors.Add("LeftUp", new Vector3(pos.x - Mathf.Sign(pos.y) * offset, pos.y, pos.z + offset));
-						neighbors.Add("LeftCenter", new Vector3(pos.x - Mathf.Sign(pos.y) * offset, pos.y, pos.z));
-						neighbors.Add("LeftDown", new Vector3(pos.x - Mathf.Sign(pos.y) * offset, pos.y, pos.z - offset));
+						neighbors.Add("RightUp", new Vector3(pos.x + Mathf.Sign(pos.x) * offset, pos.y, pos.z + offset));
+						neighbors.Add("RightCenter", new Vector3(pos.x + Mathf.Sign(pos.x) * offset, pos.y, pos.z));
+						neighbors.Add("RightDown", new Vector3(pos.x + Mathf.Sign(pos.x) * offset, pos.y, pos.z - offset));
+						neighbors.Add("CenterUp", new Vector3(pos.x, pos.y, pos.z + Mathf.Sign(pos.y) * offset));
+						neighbors.Add("CenterDown", new Vector3(pos.x, pos.y, pos.z - Mathf.Sign(pos.y) * offset));
+						neighbors.Add("LeftUp", new Vector3(pos.x - Mathf.Sign(pos.x) * offset, pos.y, pos.z + offset));
+						neighbors.Add("LeftCenter", new Vector3(pos.x - Mathf.Sign(pos.x) * offset, pos.y, pos.z));
+						neighbors.Add("LeftDown", new Vector3(pos.x - Mathf.Sign(pos.x) * offset, pos.y, pos.z - offset));
 					}
 					else
 					{
@@ -726,8 +752,8 @@ public class TerrainController
 
 		rotations = new Dictionary<string, Utils.RotateType>();
 		rotations.Add("pos_z/", Utils.RotateType.Rotate180);
-		rotations.Add("pos_x/", Utils.RotateType.Rotate90);
-		rotations.Add("neg_x/", Utils.RotateType.Rotate270);
+		rotations.Add("pos_x/", Utils.RotateType.Rotate270);
+		rotations.Add("neg_x/", Utils.RotateType.Rotate90);
 		rotations.Add("neg_z/", Utils.RotateType.Rotate0);
 		rotations.Add("neg_y/", Utils.RotateType.Rotate0);
 		m_rotations.Add("neg_y/", rotations);

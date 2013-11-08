@@ -48,6 +48,47 @@ public class AirPlainController : MonoBehaviour
 			gameObject.transform.rotation *= Quaternion.AngleAxis(-angle, Vector3.up);
 		}
 
+		if (Input.GetKeyUp(KeyCode.Keypad0))
+		{
+			m_speed = 0.0f;
+		}
+		if (Input.GetKeyUp(KeyCode.Keypad1))
+		{
+			m_speed = 100.0f;
+		}
+		if (Input.GetKeyUp(KeyCode.Keypad2))
+		{
+			m_speed = 200.0f;
+		}
+		if (Input.GetKeyUp(KeyCode.Keypad3))
+		{
+			m_speed = 300.0f;
+		}
+		if (Input.GetKeyUp(KeyCode.Keypad4))
+		{
+			m_speed = 400.0f;
+		}
+		if (Input.GetKeyUp(KeyCode.Keypad5))
+		{
+			m_speed = 500.0f;
+		}
+		if (Input.GetKeyUp(KeyCode.Keypad6))
+		{
+			m_speed = 600.0f;
+		}
+		if (Input.GetKeyUp(KeyCode.Keypad7))
+		{
+			m_speed = 700.0f;
+		}
+		if (Input.GetKeyUp(KeyCode.Keypad8))
+		{
+			m_speed = 800.0f;
+		}
+		if (Input.GetKeyUp(KeyCode.Keypad9))
+		{
+			m_speed = 900.0f;
+		}
+
 		Vector3 forward = (-gameObject.transform.forward);
 
 		//Debug.DrawLine(gameObject.transform.position, gameObject.transform.position + forward.normalized * 60, Color.green);
